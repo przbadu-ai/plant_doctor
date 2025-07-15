@@ -1,16 +1,107 @@
-# plant_doctor
+# Plant Doctor - AI-Powered Plant Disease Detection
 
-A new Flutter project.
+An offline-capable Flutter application that uses Google's Gemma 3n models to identify plant diseases and provide farming advice.
+
+## Features
+
+- 🌿 **Plant Disease Detection**: Take or upload photos of plants to identify diseases
+- 🤖 **Offline AI**: Runs Gemma 3n models locally on device
+- 💬 **Agricultural Chat**: Ask questions about farming, plant care, and treatments
+- 🔬 **Disease Analysis**: Get detailed analysis including severity and remedies
+- 📱 **Cross-Platform**: Works on Android and iOS
+- 🚀 **Fast Inference**: GPU-accelerated model execution
+
+## Technologies
+
+- Flutter 3.8+
+- flutter_gemma package for AI integration
+- Gemma 3n E2B/E4B vision models
+- Provider for state management
+- Material You (Material 3) design
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd plant_doctor
+   ```
 
-A few resources to get you started if this is your first Flutter project:
+2. **Install dependencies**
+   ```bash
+   flutter pub get
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+3. **Run the app**
+   ```bash
+   flutter run
+   ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+4. **Download a model**
+   - Launch the app
+   - Tap the download icon in the app bar
+   - Select Gemma 3n E2B (recommended) or E4B model
+   - Wait for download to complete (~1.5GB)
+
+## Usage
+
+1. **Analyze Plant Photos**
+   - Tap the camera icon
+   - Take a photo or select from gallery
+   - AI will analyze for diseases and provide recommendations
+
+2. **Ask Questions**
+   - Type farming-related questions in the chat
+   - Get advice on plant care, treatments, and prevention
+
+3. **View Analysis**
+   - Disease identification with confidence scores
+   - Severity assessment
+   - Recommended treatments (organic and chemical)
+   - Preventive measures
+
+## Project Structure
+
+```
+lib/
+├── main.dart              # App entry point
+├── models/               # Data models
+│   ├── chat_message.dart
+│   └── plant_disease.dart
+├── services/             # Business logic
+│   ├── ai_service.dart
+│   └── model_download_service.dart
+├── providers/            # State management
+│   └── app_provider.dart
+├── screens/              # UI screens
+│   └── home_screen.dart
+└── widgets/              # Reusable widgets
+    ├── chat_widget.dart
+    └── model_selector_widget.dart
+```
+
+## Platform Setup
+
+### Android
+- Minimum SDK: 26 (Android 8.0)
+- Permissions: Camera, Storage
+
+### iOS
+- Minimum iOS: 12.0
+- Info.plist permissions:
+  - NSCameraUsageDescription
+  - NSPhotoLibraryUsageDescription
+
+## Hackathon Information
+
+This project was created for the [Google Gemma 3n Hackathon](https://www.kaggle.com/competitions/google-gemma-3n-hackathon).
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Acknowledgments
+
+- Google AI Edge team for the Gallery app inspiration
+- MediaPipe team for the GenAI SDK
+- Flutter Gemma package maintainers
