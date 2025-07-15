@@ -105,52 +105,136 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, provider, child) {
           if (!provider.isModelReady && !provider.isDownloading) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.download_for_offline,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No AI model downloaded',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Download a model to start diagnosing plant diseases',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const ModelSelectorWidget(),
-                      );
-                    },
-                    icon: const Icon(Icons.download),
-                    label: const Text('Download Model'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (provider.error != null) ...[
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Model Initialization Failed',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        provider.error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ] else ...[
+                      const Icon(
+                        Icons.download_for_offline,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No AI model downloaded',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Download a model to start diagnosing plant diseases',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const ModelSelectorWidget(),
+                        );
+                      },
+                      icon: const Icon(Icons.download),
+                      label: const Text('Download Model'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () async {
+                        final status = await provider.getModelStatus();
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Model Status'),
+                            content: Text(
+                              'Model Path: ${status['modelPath']}\n'
+                              'Model ID: ${status['modelId']}\n'
+                              'Model Exists: ${status['modelExists']}\n'
+                              'Is Model Ready: ${status['isModelReady']}\n'
+                              'Current Model ID: ${status['currentModelId']}',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: const Text('Debug Model Status'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           if (provider.isDownloading) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(value: provider.downloadProgress),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Downloading model... ${(provider.downloadProgress * 100).toStringAsFixed(1)}%',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // SizedBox(
+                    //   width: 200,
+                    //   height: 200,
+                    //   child: CircularProgressIndicator(
+                    //     value: provider.downloadProgress > 0 ? provider.downloadProgress : null,
+                    //     strokeWidth: 8,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 32),
+                    Text(
+                      'Downloading Model',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      provider.downloadStatus.isNotEmpty 
+                        ? provider.downloadStatus 
+                        : 'Preparing download...',
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (provider.downloadProgress > 0) ...[
+                      const SizedBox(height: 24),
+                      LinearProgressIndicator(
+                        value: provider.downloadProgress,
+                        minHeight: 8,
+                      ),
+                    ],
+                    if (provider.error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        provider.error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             );
           }

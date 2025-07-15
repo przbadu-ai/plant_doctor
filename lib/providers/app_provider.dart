@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
 import '../services/model_download_service.dart';
@@ -14,6 +15,7 @@ class AppProvider extends ChangeNotifier {
   String? _currentModelId;
   double _downloadProgress = 0.0;
   bool _isDownloading = false;
+  String _downloadStatus = '';
 
   List<ChatMessage> get messages => _messages;
   bool get isLoading => _isLoading;
@@ -21,6 +23,7 @@ class AppProvider extends ChangeNotifier {
   String? get currentModelId => _currentModelId;
   double get downloadProgress => _downloadProgress;
   bool get isDownloading => _isDownloading;
+  String get downloadStatus => _downloadStatus;
   bool get isModelReady => _aiService.isInitialized;
   List<ModelInfo> get availableModels => _modelService.availableModels;
 
@@ -33,27 +36,43 @@ class AppProvider extends ChangeNotifier {
     final modelPath = await _modelService.getCurrentModelPath();
     final modelId = await _modelService.getCurrentModelId();
     
+    print('App initialization - Model path: $modelPath, Model ID: $modelId');
+    
     if (modelPath != null && modelId != null) {
       final modelExists = await _modelService.isModelDownloaded(modelId);
+      print('Model exists check: $modelExists');
+      
       if (modelExists) {
         _currentModelId = modelId;
+        print('Initializing AI with model: $modelPath');
         await _initializeAI(modelPath);
+      } else {
+        print('Model file not found at expected location');
+        // Clear invalid preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('current_model_path');
+        await prefs.remove('current_model_id');
       }
+    } else {
+      print('No saved model information found');
     }
     
     notifyListeners();
   }
 
   Future<void> downloadModel(String modelId) async {
+    print('Starting download for model: $modelId');
     _isDownloading = true;
     _downloadProgress = 0.0;
     _error = null;
+    _downloadStatus = 'Initializing download...';
     notifyListeners();
 
     try {
       await for (final progress in _modelService.downloadModel(modelId, (status) {
         // Progress callback
-        // Progress: status
+        _downloadStatus = status;
+        notifyListeners();
       })) {
         _downloadProgress = progress;
         notifyListeners();
@@ -66,9 +85,12 @@ class AppProvider extends ChangeNotifier {
         _currentModelId = modelId;
       }
     } catch (e) {
+      print('Download error: $e');
       _error = 'Failed to download model: $e';
+      _downloadStatus = 'Download failed';
     } finally {
       _isDownloading = false;
+      _downloadStatus = '';
       notifyListeners();
     }
   }
@@ -88,7 +110,19 @@ class AppProvider extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
+      print('AI initialization error: $e');
       _error = 'Failed to initialize AI: $e';
+      
+      // Check for x86_64 emulator issue
+      if (e.toString().contains('SIGSEGV') || e.toString().contains('libvndksupport.so')) {
+        _error = 'AI model not supported on x86_64 emulators. Please use:\n'
+            '• ARM64 emulator (slower but compatible)\n'
+            '• Physical Android device (recommended)\n'
+            '• Or test with the smaller test model first';
+      }
+      
+      // Clear the model selection to allow re-download
+      _currentModelId = null;
       notifyListeners();
     }
   }
@@ -215,6 +249,20 @@ class AppProvider extends ChangeNotifier {
       ));
       notifyListeners();
     });
+  }
+
+  Future<Map<String, dynamic>> getModelStatus() async {
+    final modelPath = await _modelService.getCurrentModelPath();
+    final modelId = await _modelService.getCurrentModelId();
+    final modelExists = modelId != null ? await _modelService.isModelDownloaded(modelId) : false;
+    
+    return {
+      'modelPath': modelPath,
+      'modelId': modelId,
+      'modelExists': modelExists,
+      'isModelReady': isModelReady,
+      'currentModelId': _currentModelId,
+    };
   }
 
   @override

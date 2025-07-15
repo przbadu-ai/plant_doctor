@@ -26,14 +26,16 @@ class AIService {
         modelType: ModelType.gemmaIt,
         supportImage: true,
         maxNumImages: 1,
-        preferredBackend: PreferredBackend.gpu,
+        preferredBackend: PreferredBackend.cpu, // Use CPU backend for better compatibility
         maxTokens: 4096,
       );
 
       _isInitialized = true;
     } catch (e) {
-      // Log error initializing AI model: $e
-      throw Exception('Failed to initialize AI model');
+      print('Error initializing AI model: $e');
+      _isInitialized = false;
+      _model = null;
+      throw Exception('Failed to initialize AI model: $e');
     }
   }
 

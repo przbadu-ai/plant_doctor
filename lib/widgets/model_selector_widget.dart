@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/secure_config_service.dart';
+import '../services/model_download_service.dart';
+import 'token_input_dialog.dart';
 
 class ModelSelectorWidget extends StatelessWidget {
   const ModelSelectorWidget({super.key});
@@ -16,7 +19,9 @@ class ModelSelectorWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: provider.availableModels.map((model) {
                 final isCurrentModel = model.id == provider.currentModelId;
-                final sizeInMB = (model.size / 1024 / 1024).round();
+                final sizeInMB = model.estimatedSize != null 
+                    ? (model.estimatedSize! / 1024 / 1024).round()
+                    : null;
                 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -42,7 +47,7 @@ class ModelSelectorWidget extends StatelessWidget {
                             const Icon(Icons.storage, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              '$sizeInMB MB',
+                              sizeInMB != null ? '$sizeInMB MB' : 'Size TBD',
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],
@@ -55,8 +60,22 @@ class ModelSelectorWidget extends StatelessWidget {
                     onTap: isCurrentModel
                         ? null
                         : () async {
-                            Navigator.of(context).pop();
-                            await provider.downloadModel(model.id);
+                            // Check if token is needed for HuggingFace models
+                            if (model.url.contains('huggingface.co') && 
+                                !SecureConfigService().hasToken) {
+                              Navigator.of(context).pop();
+                              final tokenSaved = await showDialog<bool>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => const TokenInputDialog(),
+                              );
+                              if (tokenSaved == true) {
+                                await provider.downloadModel(model.id);
+                              }
+                            } else {
+                              Navigator.of(context).pop();
+                              await provider.downloadModel(model.id);
+                            }
                           },
                   ),
                 );
