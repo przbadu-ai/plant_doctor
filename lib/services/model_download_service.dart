@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'secure_config_service.dart';
@@ -32,6 +33,17 @@ class ModelDownloadService {
   
   // Cache for actual file sizes fetched from server
   final Map<String, int> _actualFileSizes = {};
+  
+  // Helper method to get platform-specific model path
+  String _getModelPath(String dirPath, String modelId, String extension) {
+    // On iOS, flutter_gemma expects files directly in Documents directory
+    // On Android, it works fine with subdirectories
+    if (Platform.isIOS) {
+      return '$dirPath/$modelId.$extension';
+    } else {
+      return '$dirPath/models/$modelId.$extension';
+    }
+  }
   
   final List<ModelInfo> availableModels = [
     // Gemma 3 Nano models with vision support - CORRECT .task files
@@ -140,11 +152,13 @@ class ModelDownloadService {
       final fileName = pathSegments.isNotEmpty ? pathSegments.last : '${model.id}.bin';
       final extension = fileName.contains('.') ? fileName.split('.').last : 'bin';
       
-      final modelPath = '${dir.path}/models/${model.id}.$extension';
+      final modelPath = _getModelPath(dir.path, model.id, extension);
       final modelFile = File(modelPath);
-
-      // Create models directory if it doesn't exist
-      await Directory('${dir.path}/models').create(recursive: true);
+      
+      // Create models directory if it doesn't exist (for Android)
+      if (!Platform.isIOS) {
+        await Directory('${dir.path}/models').create(recursive: true);
+      }
       
       // Get actual file size from server
       onProgress('Checking model size...');
@@ -259,7 +273,7 @@ class ModelDownloadService {
       final fileName = pathSegments.isNotEmpty ? pathSegments.last : '${model.id}.bin';
       final extension = fileName.contains('.') ? fileName.split('.').last : 'bin';
       
-      final modelPath = '${dir.path}/models/${model.id}.$extension';
+      final modelPath = _getModelPath(dir.path, model.id, extension);
       final modelFile = File(modelPath);
       
       print('Checking model at: $modelPath');
@@ -322,7 +336,7 @@ class ModelDownloadService {
       final fileName = pathSegments.isNotEmpty ? pathSegments.last : '${model.id}.bin';
       final extension = fileName.contains('.') ? fileName.split('.').last : 'bin';
       
-      final modelPath = '${dir.path}/models/${model.id}.$extension';
+      final modelPath = _getModelPath(dir.path, model.id, extension);
       final modelFile = File(modelPath);
       
       if (await modelFile.exists()) {
