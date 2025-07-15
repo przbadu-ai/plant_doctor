@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
-import '../services/model_download_service.dart';
 
 class ModelSelectorWidget extends StatelessWidget {
   const ModelSelectorWidget({super.key});

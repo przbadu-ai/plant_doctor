@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter_gemma/flutter_gemma.dart';
-import '../models/chat_message.dart';
+import 'package:flutter_gemma/core/chat.dart';
+import 'package:flutter_gemma/core/model.dart';
+import 'package:flutter_gemma/pigeon.g.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
@@ -8,8 +10,8 @@ class AIService {
   AIService._internal();
 
   final _gemma = FlutterGemmaPlugin.instance;
-  Model? _model;
-  Chat? _currentChat;
+  InferenceModel? _model;
+  InferenceChat? _currentChat;
   bool _isInitialized = false;
 
   bool get isInitialized => _isInitialized;
@@ -30,12 +32,12 @@ class AIService {
 
       _isInitialized = true;
     } catch (e) {
-      print('Error initializing AI model: $e');
+      // Log error initializing AI model: $e
       throw Exception('Failed to initialize AI model');
     }
   }
 
-  Future<Chat> createNewChat() async {
+  Future<InferenceChat> createNewChat() async {
     if (_model == null) {
       throw Exception('Model not initialized');
     }

@@ -31,16 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
         imageQuality: 85,
       );
 
-      if (image != null) {
+      if (image != null && mounted) {
         final bytes = await image.readAsBytes();
         if (mounted) {
           context.read<AppProvider>().analyzePlantImage(bytes);
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
     }
   }
 
@@ -168,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     BoxShadow(
                       offset: const Offset(0, -2),
                       blurRadius: 4,
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                     ),
                   ],
                 ),

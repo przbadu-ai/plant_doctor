@@ -41,7 +41,7 @@ class _MessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: isUser
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceVariant,
+              : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -119,7 +119,7 @@ class _MessageBubble extends StatelessWidget {
                 color: (isUser
                         ? theme.colorScheme.onPrimary
                         : theme.colorScheme.onSurfaceVariant)
-                    .withOpacity(0.6),
+                    .withValues(alpha: 0.6),
               ),
             ),
           ],

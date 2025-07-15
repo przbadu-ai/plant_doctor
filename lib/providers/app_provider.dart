@@ -8,7 +8,7 @@ class AppProvider extends ChangeNotifier {
   final AIService _aiService = AIService();
   final ModelDownloadService _modelService = ModelDownloadService();
   
-  List<ChatMessage> _messages = [];
+  final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String? _error;
   String? _currentModelId;
@@ -53,7 +53,7 @@ class AppProvider extends ChangeNotifier {
     try {
       await for (final progress in _modelService.downloadModel(modelId, (status) {
         // Progress callback
-        print(status);
+        // Progress: status
       })) {
         _downloadProgress = progress;
         notifyListeners();
@@ -199,7 +199,7 @@ class AppProvider extends ChangeNotifier {
         recommendations: [], // Extract from response
       );
     } catch (e) {
-      print('Error parsing analysis response: $e');
+      // Error parsing analysis response: $e
       return null;
     }
   }
