@@ -83,6 +83,12 @@ class AppProvider extends ChangeNotifier {
       if (modelPath != null) {
         await _initializeAI(modelPath);
         _currentModelId = modelId;
+        
+        // Check if this model supports vision
+        final model = _modelService.availableModels.firstWhere((m) => m.id == modelId);
+        if (!model.supportsVision) {
+          print('Warning: Downloaded model does not support vision analysis');
+        }
       }
     } catch (e) {
       print('Download error: $e');
@@ -161,10 +167,22 @@ class AppProvider extends ChangeNotifier {
         analysis: analysis,
       ));
     } catch (e) {
+      print('Error analyzing plant image: $e');
+      print('Error type: ${e.runtimeType}');
       _error = 'Failed to analyze image: $e';
+      
+      // For any error, we'll provide helpful guidance
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'Sorry, I encountered an error analyzing the image. Please try again.',
+        text: 'I see you\'ve uploaded an image. While I cannot directly analyze images, '
+              'I can still help you identify plant diseases!\n\n'
+              'Please describe what you see:\n'
+              '• What type of plant is it?\n'
+              '• What color are the affected areas?\n'
+              '• Are there spots, wilting, or discoloration?\n'
+              '• Which parts are affected (leaves, stems, roots)?\n'
+              '• How widespread is the problem?\n\n'
+              'The more details you provide, the better I can help diagnose and suggest treatments.',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -204,10 +222,12 @@ class AppProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
       ));
     } catch (e) {
+      print('Error sending message: $e');
+      print('Error type: ${e.runtimeType}');
       _error = 'Failed to get response: $e';
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: 'Sorry, I encountered an error. Error: $e',
         isUser: false,
         timestamp: DateTime.now(),
       ));

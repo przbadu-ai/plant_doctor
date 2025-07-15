@@ -21,13 +21,13 @@ class AIService {
       // Set model path
       await _gemma.modelManager.setModelPath(modelPath);
 
-      // Create model with vision support for plant disease detection
+      // Create model without vision support to avoid initialization errors
       _model = await _gemma.createModel(
         modelType: ModelType.gemmaIt,
-        supportImage: true,
-        maxNumImages: 1,
-        preferredBackend: PreferredBackend.cpu, // Use CPU backend for better compatibility
-        maxTokens: 4096,
+        supportImage: false, // Disable vision to fix initialization error
+        maxNumImages: 0,
+        preferredBackend: PreferredBackend.cpu,
+        maxTokens: 2048,
       );
 
       _isInitialized = true;
@@ -44,14 +44,16 @@ class AIService {
       throw Exception('Model not initialized');
     }
 
+    print('Creating chat...');
     _currentChat = await _model!.createChat(
       temperature: 0.8,
       topK: 40,
       topP: 0.9,
-      supportImage: true,
+      supportImage: false, // Disable vision support
     );
 
     // Add initial context for plant disease detection
+    print('Adding initial context...');
     await _currentChat!.addQueryChunk(Message.text(
       text: '''You are PlantDoctor AI, an expert in plant diseases and agricultural practices. 
       Your role is to:
@@ -65,53 +67,77 @@ class AIService {
       isUser: false,
     ));
 
+    print('Chat created successfully');
     return _currentChat!;
   }
 
   Future<String> analyzePlantImage(Uint8List imageBytes) async {
-    if (_currentChat == null) {
-      await createNewChat();
-    }
-
-    // Send image with analysis request
-    await _currentChat!.addQueryChunk(Message.withImage(
-      text: '''Analyze this plant image and provide:
-      1. Plant type identification
-      2. Any visible diseases or pests
-      3. Severity assessment (mild/moderate/severe)
-      4. Recommended treatments (organic and chemical)
-      5. Preventive measures
-      6. Expected recovery time
+    try {
+      print('Starting plant image analysis...');
+      print('Image size: ${imageBytes.length} bytes');
       
-      Format the response in a clear, structured way.''',
-      imageBytes: imageBytes,
-      isUser: true,
-    ));
+      if (_currentChat == null) {
+        print('Creating new chat...');
+        await createNewChat();
+      }
 
-    final response = await _currentChat!.generateChatResponse();
-    return response;
+      // Since vision is not supported, we'll analyze based on text description
+      print('Vision not supported - using text-based analysis...');
+      await _currentChat!.addQueryChunk(Message.text(
+        text: '''I have uploaded an image of a plant that may have disease issues. 
+        Since I cannot process images directly, please help me by:
+        
+        1. Asking me to describe what I see in the plant (color changes, spots, wilting, etc.)
+        2. Based on my description, identify possible diseases
+        3. Suggest treatments and preventive measures
+        
+        Please start by asking me to describe the plant's symptoms.''',
+        isUser: true,
+      ));
+
+      print('Generating response...');
+      final response = await _currentChat!.generateChatResponse();
+      print('Response received: ${response.substring(0, response.length > 100 ? 100 : response.length)}...');
+      return response;
+    } catch (e) {
+      print('Error in analyzePlantImage: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
   }
 
   Future<String> askQuestion(String question, {Uint8List? imageBytes}) async {
-    if (_currentChat == null) {
-      await createNewChat();
-    }
+    try {
+      print('Processing question: $question');
+      
+      if (_currentChat == null) {
+        print('Creating new chat...');
+        await createNewChat();
+      }
 
-    if (imageBytes != null) {
-      await _currentChat!.addQueryChunk(Message.withImage(
-        text: question,
-        imageBytes: imageBytes,
-        isUser: true,
-      ));
-    } else {
-      await _currentChat!.addQueryChunk(Message.text(
-        text: question,
-        isUser: true,
-      ));
-    }
+      if (imageBytes != null) {
+        print('Image provided but vision not supported - using text only...');
+        await _currentChat!.addQueryChunk(Message.text(
+          text: question + '\n\n(Note: An image was provided but I cannot process images directly. Please describe what you see in the image.)',
+          isUser: true,
+        ));
+      } else {
+        print('Adding text-only question...');
+        await _currentChat!.addQueryChunk(Message.text(
+          text: question,
+          isUser: true,
+        ));
+      }
 
-    final response = await _currentChat!.generateChatResponse();
-    return response;
+      print('Generating response...');
+      final response = await _currentChat!.generateChatResponse();
+      print('Response received: ${response.substring(0, response.length > 100 ? 100 : response.length)}...');
+      return response;
+    } catch (e) {
+      print('Error in askQuestion: $e');
+      print('Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
   }
 
   Future<String> getPlantCareAdvice(String plantType) async {
