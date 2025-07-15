@@ -9,7 +9,9 @@ import '../widgets/model_selector_widget.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? threadId;
+  
+  const HomeScreen({super.key, this.threadId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -18,6 +20,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.threadId != null) {
+        context.read<AppProvider>().loadChatThread(widget.threadId!);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -86,6 +98,10 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
+        leading: widget.threadId != null ? IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ) : null,
         title: Text(langProvider.appTitle),
         actions: [
           Consumer<ThemeProvider>(

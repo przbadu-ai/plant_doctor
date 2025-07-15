@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
+import '../models/chat_thread.dart';
 import '../services/ai_service.dart';
 import '../services/model_download_service.dart';
 import '../services/chat_persistence_service.dart';
@@ -14,7 +15,11 @@ class AppProvider extends ChangeNotifier {
   LanguageProvider? _languageProvider;
   
   final List<ChatMessage> _messages = [];
+  List<ChatThread> _chatThreads = [];
+  ChatThread? _currentThread;
+  String? _currentThreadId;
   bool _isLoading = false;
+  bool _isLoadingThreads = false;
   String? _error;
   String? _currentModelId;
   double _downloadProgress = 0.0;
@@ -22,7 +27,11 @@ class AppProvider extends ChangeNotifier {
   String _downloadStatus = '';
 
   List<ChatMessage> get messages => _messages;
+  List<ChatThread> get chatThreads => _chatThreads;
+  ChatThread? get currentThread => _currentThread;
+  String? get currentThreadId => _currentThreadId;
   bool get isLoading => _isLoading;
+  bool get isLoadingThreads => _isLoadingThreads;
   String? get error => _error;
   String? get currentModelId => _currentModelId;
   double get downloadProgress => _downloadProgress;
@@ -41,12 +50,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _initializeApp() async {
-    // Load chat history first
-    final savedMessages = await _chatPersistence.loadMessages();
-    if (savedMessages.isNotEmpty) {
-      _messages.addAll(savedMessages);
-      notifyListeners();
-    }
+    // Load all chat threads
+    await loadChatThreads();
     
     // Check if model is already downloaded
     final modelPath = await _modelService.getCurrentModelPath();
@@ -62,18 +67,6 @@ class AppProvider extends ChangeNotifier {
         _currentModelId = modelId;
         print('Initializing AI with model: $modelPath');
         await _initializeAI(modelPath);
-        
-        // If we have no saved messages, add welcome message
-        if (_messages.isEmpty) {
-          _messages.add(ChatMessage(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
-          await _chatPersistence.saveMessages(_messages);
-          notifyListeners();
-        }
       } else {
         print('Model file not found at expected location');
         // Clear invalid preferences
@@ -133,18 +126,6 @@ class AppProvider extends ChangeNotifier {
     try {
       await _aiService.initialize(modelPath);
       await _aiService.createNewChat();
-      
-      // Add welcome message only if no messages exist
-      if (_messages.isEmpty) {
-        _messages.add(ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-        await _chatPersistence.saveMessages(_messages);
-      }
-      
       notifyListeners();
     } catch (e) {
       print('AI initialization error: $e');
@@ -179,7 +160,7 @@ class AppProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
       imageBytes: imageBytes,
     ));
-    await _chatPersistence.saveMessages(_messages);
+    _updateCurrentThread();
 
     _isLoading = true;
     _error = null;
@@ -198,7 +179,7 @@ class AppProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
         analysis: analysis,
       ));
-      await _chatPersistence.saveMessages(_messages);
+      _updateCurrentThread();
     } catch (e) {
       print('Error analyzing plant image: $e');
       print('Error type: ${e.runtimeType}');
@@ -220,7 +201,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
-      await _chatPersistence.saveMessages(_messages);
+      _updateCurrentThread();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -242,7 +223,7 @@ class AppProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
       imageBytes: imageBytes,
     ));
-    await _chatPersistence.saveMessages(_messages);
+    _updateCurrentThread();
 
     _isLoading = true;
     _error = null;
@@ -257,7 +238,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
-      await _chatPersistence.saveMessages(_messages);
+      _updateCurrentThread();
     } catch (e) {
       print('Error sending message: $e');
       print('Error type: ${e.runtimeType}');
@@ -268,7 +249,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
-      await _chatPersistence.saveMessages(_messages);
+      _updateCurrentThread();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -297,18 +278,11 @@ class AppProvider extends ChangeNotifier {
   }
 
   void clearChat() {
-    _messages.clear();
-    _chatPersistence.clearHistory();
-    _aiService.createNewChat().then((_) async {
-      _messages.add(ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: _languageProvider?.getLocalizedPrompt('chat_cleared') ?? 'Chat cleared. How can I help you with your plants today?',
-        isUser: false,
-        timestamp: DateTime.now(),
-      ));
-      await _chatPersistence.saveMessages(_messages);
-      notifyListeners();
-    });
+    if (_currentThreadId != null) {
+      // Start a new thread when clearing chat
+      createNewThread();
+      _aiService.createNewChat();
+    }
   }
 
   Future<Map<String, dynamic>> getModelStatus() async {
@@ -323,6 +297,108 @@ class AppProvider extends ChangeNotifier {
       'isModelReady': isModelReady,
       'currentModelId': _currentModelId,
     };
+  }
+
+  // Thread management methods
+  Future<void> loadChatThreads() async {
+    _isLoadingThreads = true;
+    notifyListeners();
+    
+    try {
+      _chatThreads = await _chatPersistence.loadAllThreads();
+    } catch (e) {
+      print('Error loading chat threads: $e');
+      _chatThreads = [];
+    } finally {
+      _isLoadingThreads = false;
+      notifyListeners();
+    }
+  }
+  
+  Future<void> loadChatThread(String threadId) async {
+    _currentThreadId = threadId;
+    await _chatPersistence.setCurrentThreadId(threadId);
+    
+    final thread = await _chatPersistence.loadThread(threadId);
+    if (thread != null) {
+      _currentThread = thread;
+      _messages.clear();
+      _messages.addAll(thread.messages);
+      notifyListeners();
+    }
+  }
+  
+  void createNewThread() {
+    final threadId = DateTime.now().millisecondsSinceEpoch.toString();
+    _currentThreadId = threadId;
+    _chatPersistence.setCurrentThreadId(threadId);
+    
+    _currentThread = ChatThread(
+      id: threadId,
+      title: _languageProvider?.currentLanguage == AppLanguage.spanish ? 'Nueva consulta' :
+             _languageProvider?.currentLanguage == AppLanguage.hindi ? 'नई चैट' : 'New Chat',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      messages: [],
+    );
+    
+    _messages.clear();
+    
+    // Add welcome message
+    _messages.add(ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
+      isUser: false,
+      timestamp: DateTime.now(),
+    ));
+    
+    _updateCurrentThread();
+    notifyListeners();
+  }
+  
+  Future<void> deleteThread(String threadId) async {
+    await _chatPersistence.deleteThread(threadId);
+    _chatThreads.removeWhere((t) => t.id == threadId);
+    
+    if (_currentThreadId == threadId) {
+      _currentThreadId = null;
+      _currentThread = null;
+      _messages.clear();
+    }
+    
+    notifyListeners();
+  }
+  
+  void _updateCurrentThread() {
+    if (_currentThread == null || _currentThreadId == null) return;
+    
+    // Get first plant image for thumbnail
+    Uint8List? thumbnailImage;
+    for (final message in _messages) {
+      if (message.imageBytes != null) {
+        thumbnailImage = message.imageBytes;
+        break;
+      }
+    }
+    
+    // Update thread
+    _currentThread = _currentThread!.copyWith(
+      messages: List.from(_messages),
+      updatedAt: DateTime.now(),
+      lastMessage: _messages.isNotEmpty ? _messages.last.text : null,
+      thumbnailImage: thumbnailImage ?? _currentThread!.thumbnailImage,
+    );
+    
+    // Save thread
+    _chatPersistence.saveThread(_currentThread!);
+    
+    // Update local threads list
+    final existingIndex = _chatThreads.indexWhere((t) => t.id == _currentThreadId);
+    if (existingIndex >= 0) {
+      _chatThreads[existingIndex] = _currentThread!;
+    } else {
+      _chatThreads.insert(0, _currentThread!);
+    }
   }
 
   @override
