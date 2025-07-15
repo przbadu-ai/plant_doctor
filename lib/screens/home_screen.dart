@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/app_provider.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/model_selector_widget.dart';
 
@@ -82,22 +83,53 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plant Doctor'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const ModelSelectorWidget(),
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return IconButton(
+                icon: Icon(
+                  themeProvider.themeMode == ThemeMode.dark
+                      ? Icons.light_mode
+                      : themeProvider.themeMode == ThemeMode.light
+                          ? Icons.dark_mode
+                          : Icons.brightness_auto,
+                ),
+                tooltip: 'Toggle theme',
+                onPressed: () {
+                  themeProvider.toggleTheme();
+                },
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.clear),
+            icon: const Icon(Icons.refresh_outlined),
+            tooltip: 'Clear chat',
             onPressed: () {
               context.read<AppProvider>().clearChat();
             },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'models') {
+                showDialog(
+                  context: context,
+                  builder: (context) => const ModelSelectorWidget(),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'models',
+                child: Row(
+                  children: [
+                    Icon(Icons.download_outlined),
+                    SizedBox(width: 12),
+                    Text('Manage Models'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -111,37 +143,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (provider.error != null) ...[
-                      const Icon(
+                      Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Model Initialization Failed',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         provider.error!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ] else ...[
-                      const Icon(
-                        Icons.download_for_offline,
+                      Icon(
+                        Icons.download_for_offline_outlined,
                         size: 64,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'No AI model downloaded',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Download a model to start diagnosing plant diseases',
                         textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -159,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     TextButton(
                       onPressed: () async {
                         final status = await provider.getModelStatus();
+                        if (!context.mounted) return;
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
@@ -189,51 +227,63 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (provider.isDownloading) {
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // SizedBox(
-                    //   width: 200,
-                    //   height: 200,
-                    //   child: CircularProgressIndicator(
-                    //     value: provider.downloadProgress > 0 ? provider.downloadProgress : null,
-                    //     strokeWidth: 8,
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 32),
-                    Text(
-                      'Downloading Model',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      provider.downloadStatus.isNotEmpty 
-                        ? provider.downloadStatus 
-                        : 'Preparing download...',
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (provider.downloadProgress > 0) ...[
-                      const SizedBox(height: 24),
-                      LinearProgressIndicator(
-                        value: provider.downloadProgress,
-                        minHeight: 8,
-                      ),
-                    ],
-                    if (provider.error != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        provider.error!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 14,
+              child: Container(
+                padding: const EdgeInsets.all(32.0),
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_download_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ],
+                        const SizedBox(height: 24),
+                        Text(
+                          'Downloading Model',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          provider.downloadStatus.isNotEmpty 
+                            ? provider.downloadStatus 
+                            : 'Preparing download...',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        if (provider.downloadProgress > 0) ...[
+                          const SizedBox(height: 24),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: provider.downloadProgress,
+                              minHeight: 8,
+                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${(provider.downloadProgress * 100).toStringAsFixed(1)}%',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                        if (provider.error != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            provider.error!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             );
@@ -247,54 +297,74 @@ class _HomeScreenState extends State<HomeScreen> {
               if (provider.isLoading)
                 const LinearProgressIndicator(),
               Container(
-                padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      offset: const Offset(0, -2),
-                      blurRadius: 4,
-                      color: Colors.black.withValues(alpha: 0.1),
+                  border: Border(
+                    top: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      width: 1,
                     ),
-                  ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.camera_alt),
-                      onPressed: _showImageSourceDialog,
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: const InputDecoration(
-                          hintText: 'Ask about plant diseases...',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                padding: const EdgeInsets.all(12.0),
+                child: SafeArea(
+                  child: Row(
+                    children: [
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.add_photo_alternate_outlined),
+                        onPressed: _showImageSourceDialog,
+                        tooltip: 'Add image',
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Ask about plant diseases...',
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
                           ),
+                          onSubmitted: (text) {
+                            if (text.isNotEmpty) {
+                              provider.sendMessage(text);
+                              _messageController.clear();
+                            }
+                          },
                         ),
-                        onSubmitted: (text) {
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
+                        icon: const Icon(Icons.send),
+                        onPressed: provider.isLoading ? null : () {
+                          final text = _messageController.text;
                           if (text.isNotEmpty) {
                             provider.sendMessage(text);
                             _messageController.clear();
                           }
                         },
+                        tooltip: 'Send message',
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: () {
-                        final text = _messageController.text;
-                        if (text.isNotEmpty) {
-                          provider.sendMessage(text);
-                          _messageController.clear();
-                        }
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

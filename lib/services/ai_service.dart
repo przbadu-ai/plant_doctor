@@ -118,7 +118,7 @@ class AIService {
       if (imageBytes != null) {
         print('Image provided but vision not supported - using text only...');
         await _currentChat!.addQueryChunk(Message.text(
-          text: question + '\n\n(Note: An image was provided but I cannot process images directly. Please describe what you see in the image.)',
+          text: '$question\n\n(Note: An image was provided but I cannot process images directly. Please describe what you see in the image.)',
           isUser: true,
         ));
       } else {

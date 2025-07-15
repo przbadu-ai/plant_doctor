@@ -233,43 +233,10 @@ class ModelDownloadService {
       yield* completer.stream;
     } catch (e) {
       onProgress('Error: ${e.toString()}');
-      throw e;
+      rethrow;
     }
   }
 
-  Stream<double> _downloadFile(String url, String savePath, int totalSize, Function(String) onProgress) async* {
-    try {
-      int lastYieldedProgress = 0;
-      
-      await _dio.download(
-        url,
-        savePath,
-        onReceiveProgress: (count, total) async {
-          final progress = count / (total > 0 ? total : totalSize);
-          final progressPercent = (progress * 100).toInt();
-          
-          // Yield progress updates every 1%
-          if (progressPercent > lastYieldedProgress) {
-            lastYieldedProgress = progressPercent;
-            onProgress('Downloaded ${progressPercent}%');
-          }
-        },
-        options: Options(
-          headers: {
-            'Accept': '*/*',
-            'User-Agent': 'PlantDoctor/1.0',
-          },
-          receiveTimeout: const Duration(minutes: 30),
-          sendTimeout: const Duration(minutes: 5),
-        ),
-      );
-      
-      yield 1.0;
-    } catch (e) {
-      onProgress('Download failed: ${e.toString()}');
-      throw Exception('Failed to download model: $e');
-    }
-  }
 
   Future<String?> getCurrentModelPath() async {
     final prefs = await SharedPreferences.getInstance();

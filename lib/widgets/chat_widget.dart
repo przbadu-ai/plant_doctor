@@ -40,13 +40,13 @@ class _MessageBubble extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isUser
-              ? theme.colorScheme.primary
+              ? theme.colorScheme.primaryContainer
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 16),
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
+            bottomLeft: Radius.circular(isUser ? 20 : 4),
+            bottomRight: Radius.circular(isUser ? 4 : 20),
           ),
         ),
         child: Column(
@@ -70,7 +70,7 @@ class _MessageBubble extends StatelessWidget {
             DefaultTextStyle(
               style: TextStyle(
                 color: isUser
-                    ? theme.colorScheme.onPrimary
+                    ? theme.colorScheme.onPrimaryContainer
                     : theme.colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
@@ -79,34 +79,42 @@ class _MessageBubble extends StatelessWidget {
                 styleSheet: MarkdownStyleSheet(
                   p: TextStyle(
                     color: isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   h1: TextStyle(
                     color: isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                   h2: TextStyle(
                     color: isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                   h3: TextStyle(
                     color: isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                   listBullet: TextStyle(
                     color: isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  code: TextStyle(
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
@@ -117,7 +125,7 @@ class _MessageBubble extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: (isUser
-                        ? theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurfaceVariant)
                     .withValues(alpha: 0.6),
               ),
