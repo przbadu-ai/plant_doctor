@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'providers/app_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/language_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/chats_list_screen.dart';
+import 'screens/settings_screen.dart';
 import 'services/secure_config_service.dart';
 import 'config/app_theme.dart';
 
@@ -40,7 +41,10 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const HomeScreen(),
+            home: const ChatsListScreen(),
+            routes: {
+              '/settings': (context) => const SettingsScreen(),
+            },
             debugShowCheckedModeBanner: false,
           );
         },
