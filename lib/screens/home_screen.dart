@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/app_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/model_selector_widget.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
+                title: Text(context.read<LanguageProvider>().takePhoto),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -65,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
+                title: Text(context.read<LanguageProvider>().chooseFromGallery),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -80,9 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plant Doctor'),
+        title: Text(langProvider.appTitle),
         actions: [
           Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
@@ -94,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? Icons.dark_mode
                           : Icons.brightness_auto,
                 ),
-                tooltip: 'Toggle theme',
+                tooltip: langProvider.toggleTheme,
                 onPressed: () {
                   themeProvider.toggleTheme();
                 },
@@ -103,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
-            tooltip: 'Clear chat',
+            tooltip: langProvider.clearChat,
             onPressed: () {
               context.read<AppProvider>().clearChat();
             },
@@ -116,16 +120,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   context: context,
                   builder: (context) => const ModelSelectorWidget(),
                 );
+              } else if (value == 'settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'models',
                 child: Row(
                   children: [
-                    Icon(Icons.download_outlined),
-                    SizedBox(width: 12),
-                    Text('Manage Models'),
+                    const Icon(Icons.download_outlined),
+                    const SizedBox(width: 12),
+                    Text(langProvider.manageModels),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    const Icon(Icons.settings_outlined),
+                    const SizedBox(width: 12),
+                    Text(langProvider.settings),
                   ],
                 ),
               ),
@@ -171,12 +190,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No AI model downloaded',
+                        langProvider.noModelDownloaded,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Download a model to start diagnosing plant diseases',
+                        langProvider.downloadModelMessage,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
@@ -190,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                       icon: const Icon(Icons.download),
-                      label: const Text('Download Model'),
+                      label: Text(langProvider.downloadModel),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
@@ -243,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Downloading Model',
+                          langProvider.downloadingModel,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 16),
@@ -313,14 +332,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       IconButton.filledTonal(
                         icon: const Icon(Icons.add_photo_alternate_outlined),
                         onPressed: _showImageSourceDialog,
-                        tooltip: 'Add image',
+                        tooltip: langProvider.addImage,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _messageController,
                           decoration: InputDecoration(
-                            hintText: 'Ask about plant diseases...',
+                            hintText: langProvider.askAboutPlants,
                             filled: true,
                             fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             contentPadding: const EdgeInsets.symmetric(
@@ -361,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             _messageController.clear();
                           }
                         },
-                        tooltip: 'Send message',
+                        tooltip: langProvider.sendMessage,
                       ),
                     ],
                   ),

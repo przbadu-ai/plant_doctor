@@ -3,6 +3,7 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma/core/chat.dart';
 import 'package:flutter_gemma/core/model.dart';
 import 'package:flutter_gemma/pigeon.g.dart';
+import '../providers/language_provider.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
@@ -13,8 +14,13 @@ class AIService {
   InferenceModel? _model;
   InferenceChat? _currentChat;
   bool _isInitialized = false;
+  LanguageProvider? _languageProvider;
 
   bool get isInitialized => _isInitialized;
+  
+  void setLanguageProvider(LanguageProvider provider) {
+    _languageProvider = provider;
+  }
 
   Future<void> initialize(String modelPath) async {
     try {
@@ -54,16 +60,18 @@ class AIService {
 
     // Add initial context for plant disease detection
     print('Adding initial context...');
-    await _currentChat!.addQueryChunk(Message.text(
-      text: '''You are PlantDoctor AI, an expert in plant diseases and agricultural practices. 
+    final rolePrompt = _languageProvider?.getLocalizedPrompt('ai_role') ?? '''You are PlantDoctor AI, an expert in plant diseases and agricultural practices. 
       Your role is to:
-      1. Identify plant diseases from images
+      1. Identify plant diseases from descriptions
       2. Provide detailed analysis of symptoms
       3. Suggest organic and chemical remedies
       4. Give preventive measures
       5. Answer farming-related questions
       
-      Always be helpful, accurate, and provide practical advice for farmers.''',
+      Always be helpful, accurate, and provide practical advice for farmers.''';
+    
+    await _currentChat!.addQueryChunk(Message.text(
+      text: rolePrompt,
       isUser: false,
     ));
 
@@ -83,15 +91,17 @@ class AIService {
 
       // Since vision is not supported, we'll analyze based on text description
       print('Vision not supported - using text-based analysis...');
-      await _currentChat!.addQueryChunk(Message.text(
-        text: '''I have uploaded an image of a plant that may have disease issues. 
+      final imageAnalysisPrompt = _languageProvider?.getLocalizedPrompt('image_analysis_prompt') ?? '''I have uploaded an image of a plant that may have disease issues. 
         Since I cannot process images directly, please help me by:
         
         1. Asking me to describe what I see in the plant (color changes, spots, wilting, etc.)
         2. Based on my description, identify possible diseases
         3. Suggest treatments and preventive measures
         
-        Please start by asking me to describe the plant's symptoms.''',
+        Please start by asking me to describe the plant's symptoms.''';
+      
+      await _currentChat!.addQueryChunk(Message.text(
+        text: imageAnalysisPrompt,
         isUser: true,
       ));
 

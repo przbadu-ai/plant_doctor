@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../providers/language_provider.dart';
 import '../services/secure_config_service.dart';
 import 'token_input_dialog.dart';
 
@@ -9,6 +10,8 @@ class ModelSelectorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+    
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
         return Dialog(
@@ -21,7 +24,7 @@ class ModelSelectorWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Select AI Model',
+                    langProvider.selectAIModel,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 16),
@@ -52,14 +55,14 @@ class ModelSelectorWidget extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              model.supportsVision ? 'Vision Support' : 'Text Only',
+                              model.supportsVision ? langProvider.visionSupport : langProvider.textOnly,
                               style: const TextStyle(fontSize: 12),
                             ),
                             const SizedBox(width: 12),
                             const Icon(Icons.storage, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              sizeInMB != null ? '$sizeInMB MB' : 'Size TBD',
+                              sizeInMB != null ? '$sizeInMB MB' : langProvider.sizeTBD,
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],
@@ -100,7 +103,7 @@ class ModelSelectorWidget extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Close'),
+                      child: Text(langProvider.close),
                     ),
                   ),
                 ],

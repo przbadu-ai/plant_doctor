@@ -4,10 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
 import '../services/model_download_service.dart';
+import 'language_provider.dart';
 
 class AppProvider extends ChangeNotifier {
   final AIService _aiService = AIService();
   final ModelDownloadService _modelService = ModelDownloadService();
+  LanguageProvider? _languageProvider;
   
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
@@ -26,6 +28,11 @@ class AppProvider extends ChangeNotifier {
   String get downloadStatus => _downloadStatus;
   bool get isModelReady => _aiService.isInitialized;
   List<ModelInfo> get availableModels => _modelService.availableModels;
+  
+  void setLanguageProvider(LanguageProvider provider) {
+    _languageProvider = provider;
+    _aiService.setLanguageProvider(provider);
+  }
 
   AppProvider() {
     _initializeApp();
@@ -109,7 +116,7 @@ class AppProvider extends ChangeNotifier {
       // Add welcome message
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
+        text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -143,7 +150,7 @@ class AppProvider extends ChangeNotifier {
     // Add user message with image
     _messages.add(ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: 'Analyze this plant for diseases',
+      text: _languageProvider?.getLocalizedPrompt('analyze_plant') ?? 'Analyze this plant for diseases',
       isUser: true,
       timestamp: DateTime.now(),
       imageBytes: imageBytes,
@@ -174,7 +181,8 @@ class AppProvider extends ChangeNotifier {
       // For any error, we'll provide helpful guidance
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'I see you\'ve uploaded an image. While I cannot directly analyze images, '
+        text: _languageProvider?.getLocalizedPrompt('image_upload_help') ?? 
+              'I see you\'ve uploaded an image. While I cannot directly analyze images, '
               'I can still help you identify plant diseases!\n\n'
               'Please describe what you see:\n'
               '• What type of plant is it?\n'
@@ -227,7 +235,7 @@ class AppProvider extends ChangeNotifier {
       _error = 'Failed to get response: $e';
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'Sorry, I encountered an error. Error: $e',
+        text: _languageProvider?.getLocalizedPrompt('error_message') ?? 'Sorry, I encountered an error. Please try again.',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -263,7 +271,7 @@ class AppProvider extends ChangeNotifier {
     _aiService.createNewChat().then((_) {
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: 'Chat cleared. How can I help you with your plants today?',
+        text: _languageProvider?.getLocalizedPrompt('chat_cleared') ?? 'Chat cleared. How can I help you with your plants today?',
         isUser: false,
         timestamp: DateTime.now(),
       ));

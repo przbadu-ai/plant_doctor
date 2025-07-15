@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/language_provider.dart';
 import '../services/secure_config_service.dart';
 
 class TokenInputDialog extends StatefulWidget {
@@ -21,22 +23,24 @@ class _TokenInputDialogState extends State<TokenInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+    
     return AlertDialog(
-      title: const Text('Hugging Face Token Required'),
+      title: Text(langProvider.huggingFaceTokenRequired),
       content: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'To download Gemma 3n models, you need a Hugging Face token.',
-              style: TextStyle(fontSize: 14),
+            Text(
+              langProvider.tokenRequiredMessage,
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Get your token from:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              langProvider.getTokenFrom,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SelectableText(
               'https://huggingface.co/settings/tokens',
@@ -47,7 +51,7 @@ class _TokenInputDialogState extends State<TokenInputDialog> {
               controller: _controller,
               obscureText: _obscureText,
               decoration: InputDecoration(
-                labelText: 'Token',
+                labelText: langProvider.token,
                 hintText: 'hf_xxxxxxxxxxxxxxxxxxxx',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
@@ -61,18 +65,18 @@ class _TokenInputDialogState extends State<TokenInputDialog> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your token';
+                  return langProvider.pleaseEnterToken;
                 }
                 if (!value.startsWith('hf_')) {
-                  return 'Token should start with hf_';
+                  return langProvider.tokenShouldStartWith;
                 }
                 return null;
               },
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Your token will be stored securely on this device.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            Text(
+              langProvider.tokenStoredSecurely,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
@@ -80,7 +84,7 @@ class _TokenInputDialogState extends State<TokenInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(langProvider.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -91,7 +95,7 @@ class _TokenInputDialogState extends State<TokenInputDialog> {
               }
             }
           },
-          child: const Text('Save Token'),
+          child: Text(langProvider.saveToken),
         ),
       ],
     );

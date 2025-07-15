@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/secure_config_service.dart';
 import 'config/app_theme.dart';
@@ -22,13 +23,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProxyProvider<LanguageProvider, AppProvider>(
+          create: (_) => AppProvider(),
+          update: (context, languageProvider, appProvider) {
+            appProvider?.setLanguageProvider(languageProvider);
+            return appProvider ?? AppProvider();
+          },
+        ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Consumer2<ThemeProvider, LanguageProvider>(
+        builder: (context, themeProvider, langProvider, child) {
           return MaterialApp(
-            title: 'Plant Doctor',
+            title: langProvider.appTitle,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
