@@ -4,11 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
 import '../services/model_download_service.dart';
+import '../services/chat_persistence_service.dart';
 import 'language_provider.dart';
 
 class AppProvider extends ChangeNotifier {
   final AIService _aiService = AIService();
   final ModelDownloadService _modelService = ModelDownloadService();
+  final ChatPersistenceService _chatPersistence = ChatPersistenceService();
   LanguageProvider? _languageProvider;
   
   final List<ChatMessage> _messages = [];
@@ -39,6 +41,13 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _initializeApp() async {
+    // Load chat history first
+    final savedMessages = await _chatPersistence.loadMessages();
+    if (savedMessages.isNotEmpty) {
+      _messages.addAll(savedMessages);
+      notifyListeners();
+    }
+    
     // Check if model is already downloaded
     final modelPath = await _modelService.getCurrentModelPath();
     final modelId = await _modelService.getCurrentModelId();
@@ -53,6 +62,18 @@ class AppProvider extends ChangeNotifier {
         _currentModelId = modelId;
         print('Initializing AI with model: $modelPath');
         await _initializeAI(modelPath);
+        
+        // If we have no saved messages, add welcome message
+        if (_messages.isEmpty) {
+          _messages.add(ChatMessage(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+          await _chatPersistence.saveMessages(_messages);
+          notifyListeners();
+        }
       } else {
         print('Model file not found at expected location');
         // Clear invalid preferences
@@ -113,13 +134,16 @@ class AppProvider extends ChangeNotifier {
       await _aiService.initialize(modelPath);
       await _aiService.createNewChat();
       
-      // Add welcome message
-      _messages.add(ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
-        isUser: false,
-        timestamp: DateTime.now(),
-      ));
+      // Add welcome message only if no messages exist
+      if (_messages.isEmpty) {
+        _messages.add(ChatMessage(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          text: _languageProvider?.getLocalizedPrompt('welcome') ?? 'Welcome to PlantDoctor! I can help you identify plant diseases, suggest treatments, and answer farming questions. Upload a photo of your plant or ask me anything!',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+        await _chatPersistence.saveMessages(_messages);
+      }
       
       notifyListeners();
     } catch (e) {
@@ -155,6 +179,7 @@ class AppProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
       imageBytes: imageBytes,
     ));
+    await _chatPersistence.saveMessages(_messages);
 
     _isLoading = true;
     _error = null;
@@ -173,6 +198,7 @@ class AppProvider extends ChangeNotifier {
         timestamp: DateTime.now(),
         analysis: analysis,
       ));
+      await _chatPersistence.saveMessages(_messages);
     } catch (e) {
       print('Error analyzing plant image: $e');
       print('Error type: ${e.runtimeType}');
@@ -194,6 +220,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
+      await _chatPersistence.saveMessages(_messages);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -215,6 +242,7 @@ class AppProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
       imageBytes: imageBytes,
     ));
+    await _chatPersistence.saveMessages(_messages);
 
     _isLoading = true;
     _error = null;
@@ -229,6 +257,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
+      await _chatPersistence.saveMessages(_messages);
     } catch (e) {
       print('Error sending message: $e');
       print('Error type: ${e.runtimeType}');
@@ -239,6 +268,7 @@ class AppProvider extends ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       ));
+      await _chatPersistence.saveMessages(_messages);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -268,13 +298,15 @@ class AppProvider extends ChangeNotifier {
 
   void clearChat() {
     _messages.clear();
-    _aiService.createNewChat().then((_) {
+    _chatPersistence.clearHistory();
+    _aiService.createNewChat().then((_) async {
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         text: _languageProvider?.getLocalizedPrompt('chat_cleared') ?? 'Chat cleared. How can I help you with your plants today?',
         isUser: false,
         timestamp: DateTime.now(),
       ));
+      await _chatPersistence.saveMessages(_messages);
       notifyListeners();
     });
   }
