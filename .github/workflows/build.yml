@@ -32,6 +32,17 @@ jobs:
           flutter-version: '3.32.6'
           channel: 'stable'
           
+      - name: Create env_config.dart
+        env:
+          HUGGING_FACE_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
+        run: |
+          cat > lib/config/env_config.dart << EOF
+          // Auto-generated configuration file
+          class EnvConfig {
+            static const String huggingFaceToken = '$HUGGING_FACE_TOKEN';
+          }
+          EOF
+          
       - name: Get dependencies
         run: flutter pub get
         

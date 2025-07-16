@@ -23,6 +23,7 @@ You need to set up the following GitHub secrets for the build workflow:
      - `KEYSTORE_PASSWORD`: Your keystore password
      - `KEY_PASSWORD`: Your key password
      - `KEY_ALIAS`: Your key alias (e.g., "upload")
+     - `HUGGING_FACE_TOKEN`: Your Hugging Face API token (get from https://huggingface.co/settings/tokens)
 
 ## Triggering Releases
 

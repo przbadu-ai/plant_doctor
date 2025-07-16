@@ -92,6 +92,34 @@ lib/
   - NSCameraUsageDescription
   - NSPhotoLibraryUsageDescription
 
+## Building Release APK
+
+To build a release APK for Android, you need to set up code signing:
+
+1. **Generate a keystore** (if you don't have one):
+   ```bash
+   keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+   Place the generated `upload-keystore.jks` file in `android/app/` directory.
+
+2. **Create key.properties file**:
+   Create a file named `key.properties` in the `android/` directory with your keystore information:
+   ```properties
+   storePassword=<your-keystore-password>
+   keyPassword=<your-key-password>
+   keyAlias=upload
+   storeFile=upload-keystore.jks
+   ```
+
+3. **Build the release APK**:
+   ```bash
+   flutter build apk --release
+   ```
+   
+   The signed APK will be generated at `build/app/outputs/flutter-apk/app-release.apk`
+
+**Important**: Never commit your `key.properties` file or keystore files to version control. They are already included in `.gitignore`.
+
 ## Hackathon Information
 
 This project was created for the [Google Gemma 3n Hackathon](https://www.kaggle.com/competitions/google-gemma-3n-hackathon).
