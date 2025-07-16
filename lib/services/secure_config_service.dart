@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:plant_doctor/config/env_config.dart';
 
 class SecureConfigService {
   static final SecureConfigService _instance = SecureConfigService._internal();
@@ -7,9 +8,10 @@ class SecureConfigService {
 
   String? _huggingFaceToken;
 
-  // Option 1: Get from environment variable (for CI/CD)
+  // Check in order: 1) User saved token, 2) EnvConfig, 3) Environment variable
   String? get huggingFaceToken {
     return _huggingFaceToken ?? 
+           (EnvConfig.huggingFaceToken.isNotEmpty ? EnvConfig.huggingFaceToken : null) ??
            const String.fromEnvironment('HUGGING_FACE_TOKEN');
   }
 

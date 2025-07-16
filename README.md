@@ -27,17 +27,22 @@ An offline-capable Flutter application that uses Google's Gemma 3n models to ide
    cd plant_doctor
    ```
 
-2. **Install dependencies**
+2. **Configure Hugging Face Token**
+   - Copy `lib/config/env_config.dart.example` to `lib/config/env_config.dart`
+   - Add your Hugging Face token (get one from https://huggingface.co/settings/tokens)
+   - This token will be embedded in the app so users won't need to enter it
+
+3. **Install dependencies**
    ```bash
    flutter pub get
    ```
 
-3. **Run the app**
+4. **Run the app**
    ```bash
    flutter run
    ```
 
-4. **Download a model**
+5. **Download a model**
    - Launch the app
    - Tap the download icon in the app bar
    - Select Gemma 3n E2B (recommended) or E4B model
