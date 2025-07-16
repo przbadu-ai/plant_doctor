@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'secure_config_service.dart';
+import '../utils/file_size_formatter.dart';
 
 class ModelInfo {
   final String id;
@@ -50,7 +51,7 @@ class ModelDownloadService {
       id: 'gemma3n-e2b-task',
       name: 'Gemma 3n E2B Vision',
       url: 'https://huggingface.co/google/gemma-3n-E2B-it-litert-preview/resolve/main/gemma-3n-E2B-it-int4.task',
-      estimatedSize: 3100000000, // ~3.1GB estimated
+      estimatedSize: 3600000000, // ~3.6GB
       description: 'Gemma 3 Nano E2B with vision support for plant disease detection',
       supportsVision: true,
     ),
@@ -58,28 +59,28 @@ class ModelDownloadService {
       id: 'gemma3n-e4b-task',
       name: 'Gemma 3n E4B Vision',
       url: 'https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task',
-      estimatedSize: 3100000000, // ~3.1GB estimated
+      estimatedSize: 4500000000, // ~4.5GB
       description: 'Higher quality Gemma 3 Nano E4B with vision capabilities',
       supportsVision: true,
     ),
     // Alternative: Smaller Gemma models without vision (for testing)
-    ModelInfo(
-      id: 'gemma-2b-test',
-      name: 'Gemma 2B (No Vision)',
-      url: 'https://storage.googleapis.com/jmstore/kaggleweb/grader_models/gemma/gemma-2b-it-cpu-int4.bin',
-      estimatedSize: 1300000000, // ~1.3GB estimated
-      description: 'Smaller Gemma 2B for testing (no vision support)',
-      supportsVision: false,
-    ),
-    // Small test download
-    ModelInfo(
-      id: 'test-download',
-      name: 'Test Download',
-      url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      estimatedSize: 13000, // ~13KB estimated
-      description: 'Small file to test download functionality',
-      supportsVision: false,
-    ),
+    // ModelInfo(
+    //   id: 'gemma-2b-test',
+    //   name: 'Gemma 2B (No Vision)',
+    //   url: 'https://storage.googleapis.com/jmstore/kaggleweb/grader_models/gemma/gemma-2b-it-cpu-int4.bin',
+    //   estimatedSize: 1300000000, // ~1.3GB estimated
+    //   description: 'Smaller Gemma 2B for testing (no vision support)',
+    //   supportsVision: false,
+    // ),
+    // // Small test download
+    // ModelInfo(
+    //   id: 'test-download',
+    //   name: 'Test Download',
+    //   url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    //   estimatedSize: 13000, // ~13KB estimated
+    //   description: 'Small file to test download functionality',
+    //   supportsVision: false,
+    // ),
   ];
 
   Future<int?> getActualFileSize(String url) async {
@@ -202,7 +203,7 @@ class ModelDownloadService {
         onReceiveProgress: (count, total) {
           final progress = count / (total > 0 ? total : actualSize);
           completer.add(progress);
-          onProgress('Downloaded ${(progress * 100).toStringAsFixed(1)}% (${(count / 1024 / 1024).toStringAsFixed(1)} MB / ${((total > 0 ? total : actualSize) / 1024 / 1024).toStringAsFixed(1)} MB)');
+          onProgress('Downloaded ${(progress * 100).toStringAsFixed(1)}% (${FileSizeFormatter.formatBytesAsMB(count)} / ${FileSizeFormatter.formatBytesAsMB(total > 0 ? total : actualSize)})');
         },
         options: Options(
           headers: {
@@ -232,7 +233,7 @@ class ModelDownloadService {
           await prefs.setString('current_model_path', modelPath);
           await prefs.setString('current_model_id', modelId);
           await prefs.setInt('model_size_$modelId', actualSize);
-          onProgress('Download complete! Verified ${(downloadedSize / 1024 / 1024).toStringAsFixed(1)} MB');
+          onProgress('Download complete! Verified ${FileSizeFormatter.formatBytes(downloadedSize)}');
           completer.close();
         } else {
           throw Exception('Downloaded file not found after completion');
