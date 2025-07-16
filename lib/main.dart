@@ -1,20 +1,46 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
 import 'providers/app_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/language_provider.dart';
 import 'screens/chats_list_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/debug_screen.dart';
 import 'services/secure_config_service.dart';
 import 'config/app_theme.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load any saved tokens
-  await SecureConfigService().loadToken();
-  
-  runApp(const MyApp());
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      
+      // Set up Crashlytics
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      
+      // Enable crash collection in debug mode (optional)
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    } catch (e) {
+      print('Firebase initialization error: $e');
+      // Continue without Firebase if initialization fails
+    }
+    
+    // Load any saved tokens
+    await SecureConfigService().loadToken();
+    
+    runApp(const MyApp());
+  }, (error, stack) {
+    // Catch any errors that occur outside of Flutter
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -44,6 +70,7 @@ class MyApp extends StatelessWidget {
             home: const ChatsListScreen(),
             routes: {
               '/settings': (context) => const SettingsScreen(),
+              '/debug': (context) => const DebugScreen(),
             },
             debugShowCheckedModeBanner: false,
           );

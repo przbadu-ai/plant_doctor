@@ -32,17 +32,27 @@ An offline-capable Flutter application that uses Google's Gemma 3n models to ide
    - Add your Hugging Face token (get one from https://huggingface.co/settings/tokens)
    - This token will be embedded in the app so users won't need to enter it
 
-3. **Install dependencies**
+3. **Set up Firebase (for crash reporting)**
+   ```bash
+   # Install FlutterFire CLI if you haven't already
+   dart pub global activate flutterfire_cli
+   
+   # Configure Firebase for your project
+   flutterfire configure
+   ```
+   This will create the necessary Firebase configuration files for your development environment.
+
+4. **Install dependencies**
    ```bash
    flutter pub get
    ```
 
-4. **Run the app**
+5. **Run the app**
    ```bash
    flutter run
    ```
 
-5. **Download a model**
+6. **Download a model**
    - Launch the app
    - Tap the download icon in the app bar
    - Select Gemma 3n E2B (recommended) or E4B model
