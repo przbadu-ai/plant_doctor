@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../models/chat_message.dart';
 import '../models/chat_thread.dart';
 import '../services/ai_service.dart';
@@ -124,12 +125,26 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _initializeAI(String modelPath) async {
     try {
+      await FirebaseCrashlytics.instance.log('Starting AI initialization with path: $modelPath');
       await _aiService.initialize(modelPath);
       await _aiService.createNewChat();
+      await FirebaseCrashlytics.instance.log('AI initialization completed successfully');
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('AI initialization error: $e');
       _error = 'Failed to initialize AI: $e';
+      
+      // Report to Crashlytics with device context
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'AI initialization failed in AppProvider',
+        information: [
+          'modelPath: $modelPath',
+          'currentModelId: $_currentModelId',
+          'error: $e',
+        ],
+      );
       
       // Check for x86_64 emulator issue
       if (e.toString().contains('SIGSEGV') || e.toString().contains('libvndksupport.so')) {

@@ -1,8 +1,11 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma/core/chat.dart';
 import 'package:flutter_gemma/core/model.dart';
 import 'package:flutter_gemma/pigeon.g.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:path_provider/path_provider.dart';
 import '../providers/language_provider.dart';
 
 class AIService {
@@ -22,8 +25,35 @@ class AIService {
     _languageProvider = provider;
   }
 
+  Future<void> _cleanupXNNPackCache(String modelPath) async {
+    try {
+      // Clean up XNNPack cache files that might be corrupted
+      final cacheFile = File('$modelPath.xnnpack_cache');
+      if (await cacheFile.exists()) {
+        await cacheFile.delete();
+        print('Deleted XNNPack cache file: ${cacheFile.path}');
+      }
+      
+      // Also clean up any temp cache in app directory
+      final appDir = await getApplicationDocumentsDirectory();
+      final cacheDir = Directory('${appDir.path}/xnnpack_cache');
+      if (await cacheDir.exists()) {
+        await cacheDir.delete(recursive: true);
+        print('Deleted XNNPack cache directory');
+      }
+    } catch (e) {
+      print('Error cleaning XNNPack cache: $e');
+    }
+  }
+
   Future<void> initialize(String modelPath) async {
     try {
+      // Log model initialization attempt
+      await FirebaseCrashlytics.instance.log('Initializing AI model: $modelPath');
+      
+      // Clean up any corrupted XNNPack cache
+      await _cleanupXNNPackCache(modelPath);
+      
       // Set model path
       await _gemma.modelManager.setModelPath(modelPath);
 
@@ -37,10 +67,23 @@ class AIService {
       );
 
       _isInitialized = true;
-    } catch (e) {
+      await FirebaseCrashlytics.instance.log('AI model initialized successfully');
+    } catch (e, stackTrace) {
       print('Error initializing AI model: $e');
       _isInitialized = false;
       _model = null;
+      
+      // Report to Crashlytics with context
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'AI model initialization failed',
+        information: [
+          'modelPath: $modelPath',
+          'error: $e',
+        ],
+      );
+      
       throw Exception('Failed to initialize AI model: $e');
     }
   }

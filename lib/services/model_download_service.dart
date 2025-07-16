@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'secure_config_service.dart';
 import '../utils/file_size_formatter.dart';
 
@@ -51,7 +52,7 @@ class ModelDownloadService {
       id: 'gemma3n-e2b-task',
       name: 'Gemma 3n E2B Vision',
       url: 'https://huggingface.co/google/gemma-3n-E2B-it-litert-preview/resolve/main/gemma-3n-E2B-it-int4.task',
-      estimatedSize: 3600000000, // ~3.6GB
+      estimatedSize: 3865470464, // ~3.6GB
       description: 'Gemma 3 Nano E2B with vision support for plant disease detection',
       supportsVision: true,
     ),
@@ -59,7 +60,7 @@ class ModelDownloadService {
       id: 'gemma3n-e4b-task',
       name: 'Gemma 3n E4B Vision',
       url: 'https://huggingface.co/google/gemma-3n-E4B-it-litert-preview/resolve/main/gemma-3n-E4B-it-int4.task',
-      estimatedSize: 4500000000, // ~4.5GB
+      estimatedSize: 4831838720, // ~4.5GB
       description: 'Higher quality Gemma 3 Nano E4B with vision capabilities',
       supportsVision: true,
     ),
@@ -238,15 +239,40 @@ class ModelDownloadService {
         } else {
           throw Exception('Downloaded file not found after completion');
         }
-      }).catchError((error) {
+      }).catchError((error, stackTrace) async {
         onProgress('Download failed: ${error.toString()}');
+        
+        // Report download error to Crashlytics
+        await FirebaseCrashlytics.instance.recordError(
+          error,
+          stackTrace,
+          reason: 'Model download failed',
+          information: [
+            'modelId: $modelId',
+            'modelUrl: ${model.url}',
+            'error: $error',
+          ],
+        );
+        
         completer.addError(error);
         completer.close();
       });
       
       yield* completer.stream;
-    } catch (e) {
+    } catch (e, stackTrace) {
       onProgress('Error: ${e.toString()}');
+      
+      // Report download error to Crashlytics
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'Model download error',
+        information: [
+          'modelId: $modelId',
+          'error: $e',
+        ],
+      );
+      
       rethrow;
     }
   }

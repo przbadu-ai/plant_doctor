@@ -53,4 +53,7 @@ lib/config/env_config.dart
 *.keystore
 key.properties
 keystore_base64.txt
+
+# Firebase configuration files (exclude from public repos)
 android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
