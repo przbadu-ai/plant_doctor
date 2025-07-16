@@ -114,10 +114,10 @@ class ChatsListScreen extends StatelessWidget {
                 provider.deleteThread(thread.id);
                 Navigator.of(context).pop();
               },
-              child: Text(_getDeleteLabel(langProvider)),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.error,
               ),
+              child: Text(_getDeleteLabel(langProvider)),
             ),
           ],
         );
