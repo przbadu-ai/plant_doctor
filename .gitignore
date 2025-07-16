@@ -47,3 +47,9 @@ app.*.map.json
 
 # Environment configuration with sensitive data
 lib/config/env_config.dart
+
+# Never commit keystore files to git
+*.jks
+*.keystore
+key.properties
+keystore_base64.txt
