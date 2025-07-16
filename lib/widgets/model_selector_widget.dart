@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/secure_config_service.dart';
+import '../utils/file_size_formatter.dart';
 import 'token_input_dialog.dart';
 
 class ModelSelectorWidget extends StatelessWidget {
@@ -34,8 +35,8 @@ class ModelSelectorWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: provider.availableModels.map((model) {
                 final isCurrentModel = model.id == provider.currentModelId;
-                final sizeInMB = model.estimatedSize != null 
-                    ? (model.estimatedSize! / 1024 / 1024).round()
+                final sizeDisplay = model.estimatedSize != null 
+                    ? FileSizeFormatter.formatBytes(model.estimatedSize!)
                     : null;
                 
                 return Card(
@@ -62,7 +63,7 @@ class ModelSelectorWidget extends StatelessWidget {
                             const Icon(Icons.storage, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              sizeInMB != null ? '$sizeInMB MB' : langProvider.sizeTBD,
+                              sizeDisplay ?? langProvider.sizeTBD,
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],

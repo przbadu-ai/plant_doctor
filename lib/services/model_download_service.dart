@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'secure_config_service.dart';
+import '../utils/file_size_formatter.dart';
 
 class ModelInfo {
   final String id;
@@ -203,7 +204,7 @@ class ModelDownloadService {
         onReceiveProgress: (count, total) {
           final progress = count / (total > 0 ? total : actualSize);
           completer.add(progress);
-          onProgress('Downloaded ${(progress * 100).toStringAsFixed(1)}% (${(count / 1024 / 1024).toStringAsFixed(1)} MB / ${((total > 0 ? total : actualSize) / 1024 / 1024).toStringAsFixed(1)} MB)');
+          onProgress('Downloaded ${(progress * 100).toStringAsFixed(1)}% (${FileSizeFormatter.formatBytesAsMB(count)} / ${FileSizeFormatter.formatBytesAsMB(total > 0 ? total : actualSize)})');
         },
         options: Options(
           headers: {
@@ -233,7 +234,7 @@ class ModelDownloadService {
           await prefs.setString('current_model_path', modelPath);
           await prefs.setString('current_model_id', modelId);
           await prefs.setInt('model_size_$modelId', actualSize);
-          onProgress('Download complete! Verified ${(downloadedSize / 1024 / 1024).toStringAsFixed(1)} MB');
+          onProgress('Download complete! Verified ${FileSizeFormatter.formatBytes(downloadedSize)}');
           completer.close();
         } else {
           throw Exception('Downloaded file not found after completion');
