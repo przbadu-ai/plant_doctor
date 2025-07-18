@@ -255,6 +255,9 @@ Cuantos más detalles proporciones, mejor podré ayudar a diagnosticar y sugerir
   String get sizeTBD => _currentLanguage == AppLanguage.english ? 'Size TBD' :
                        _currentLanguage == AppLanguage.spanish ? 'Tamaño por determinar' : 'आकार निर्धारित नहीं';
   
+  String get currentModel => _currentLanguage == AppLanguage.english ? 'Active' :
+                            _currentLanguage == AppLanguage.spanish ? 'Activo' : 'सक्रिय';
+  
   String get huggingFaceTokenRequired => _currentLanguage == AppLanguage.english ? 'Hugging Face Token Required' :
                                         _currentLanguage == AppLanguage.spanish ? 'Se requiere token de Hugging Face' : 'Hugging Face टोकन आवश्यक है';
   

@@ -102,7 +102,39 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ) : null,
-        title: Text(langProvider.appTitle),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(langProvider.appTitle),
+            Consumer<AppProvider>(
+              builder: (context, appProvider, child) {
+                final modelInfo = appProvider.currentModelInfo;
+                if (modelInfo != null && appProvider.isModelReady) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.smart_toy_outlined,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        modelInfo.name,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
         actions: [
           Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
@@ -119,13 +151,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   themeProvider.toggleTheme();
                 },
               );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh_outlined),
-            tooltip: langProvider.clearChat,
-            onPressed: () {
-              context.read<AppProvider>().clearChat();
             },
           ),
           PopupMenuButton<String>(
