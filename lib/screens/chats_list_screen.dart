@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../providers/language_provider.dart';
 import '../models/chat_thread.dart';
+import '../widgets/model_indicator.dart';
 import 'home_screen.dart';
 
 class ChatsListScreen extends StatelessWidget {
@@ -15,7 +16,14 @@ class ChatsListScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(langProvider.appTitle),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(langProvider.appTitle),
+            const ModelIndicator(),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

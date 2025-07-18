@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../providers/language_provider.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/model_selector_widget.dart';
+import '../widgets/model_indicator.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -107,32 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(langProvider.appTitle),
-            Consumer<AppProvider>(
-              builder: (context, appProvider, child) {
-                final modelInfo = appProvider.currentModelInfo;
-                if (modelInfo != null && appProvider.isModelReady) {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.smart_toy_outlined,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        modelInfo.name,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+            const ModelIndicator(),
           ],
         ),
         actions: [
