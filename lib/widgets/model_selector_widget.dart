@@ -71,7 +71,19 @@ class ModelSelectorWidget extends StatelessWidget {
                       ],
                     ),
                     trailing: isCurrentModel
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.green),
+                              Text(
+                                langProvider.currentModel,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          )
                         : null,
                     onTap: isCurrentModel
                         ? null
