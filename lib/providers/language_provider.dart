@@ -286,4 +286,27 @@ Cuantos más detalles proporciones, mejor podré ayudar a diagnosticar y sugerir
   
   String get saveToken => _currentLanguage == AppLanguage.english ? 'Save Token' :
                          _currentLanguage == AppLanguage.spanish ? 'Guardar Token' : 'टोकन सहेजें';
+  
+  String get welcomeMessage => _currentLanguage == AppLanguage.english ? 'Welcome to Plant Doctor!' :
+                              _currentLanguage == AppLanguage.spanish ? '¡Bienvenido a Plant Doctor!' : 'Plant Doctor में आपका स्वागत है!';
+  
+  String get getStartedMessage => _currentLanguage == AppLanguage.english ? 'Get started by taking or uploading a photo of your plant' :
+                                 _currentLanguage == AppLanguage.spanish ? 'Comienza tomando o subiendo una foto de tu planta' : 
+                                 'अपने पौधे की फोटो लेकर या अपलोड करके शुरू करें';
+  
+  String get takePhotoHint => _currentLanguage == AppLanguage.english ? 'Use your camera' :
+                             _currentLanguage == AppLanguage.spanish ? 'Usa tu cámara' : 'अपना कैमरा उपयोग करें';
+  
+  String get choosePhotoHint => _currentLanguage == AppLanguage.english ? 'Select from gallery' :
+                               _currentLanguage == AppLanguage.spanish ? 'Seleccionar de la galería' : 'गैलरी से चुनें';
+  
+  String get askQuestion => _currentLanguage == AppLanguage.english ? 'Ask a Question' :
+                           _currentLanguage == AppLanguage.spanish ? 'Hacer una Pregunta' : 'प्रश्न पूछें';
+  
+  String get askQuestionHint => _currentLanguage == AppLanguage.english ? 'Type your question below' :
+                               _currentLanguage == AppLanguage.spanish ? 'Escribe tu pregunta abajo' : 'नीचे अपना प्रश्न टाइप करें';
+  
+  String get tipMessage => _currentLanguage == AppLanguage.english ? 'Tip: For best results, take clear photos in good lighting' :
+                          _currentLanguage == AppLanguage.spanish ? 'Consejo: Para mejores resultados, toma fotos claras con buena iluminación' : 
+                          'सुझाव: सर्वोत्तम परिणामों के लिए, अच्छी रोशनी में स्पष्ट फोटो लें';
 }

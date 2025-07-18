@@ -37,9 +37,9 @@ class ChatsListScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.chat_bubble_outline,
+                    Icons.local_florist_outlined,
                     size: 64,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -47,10 +47,13 @@ class ChatsListScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _getStartChatMessage(langProvider),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15.0, right: 15.0),
+                    child: Text(
+                      _getStartChatMessage(langProvider),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -89,7 +92,7 @@ class ChatsListScreen extends StatelessWidget {
             ),
           );
         },
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.camera_alt_outlined),
         label: Text(_getNewChatLabel(context.read<LanguageProvider>())),
       ),
     );
@@ -128,33 +131,33 @@ class ChatsListScreen extends StatelessWidget {
   String _getNoChatsMessage(LanguageProvider lang) {
     switch (lang.currentLanguage) {
       case AppLanguage.english:
-        return 'No chats yet';
+        return 'No diagnosis history';
       case AppLanguage.spanish:
-        return 'No hay chats todavía';
+        return 'Sin historial de diagnósticos';
       case AppLanguage.hindi:
-        return 'अभी तक कोई चैट नहीं';
+        return 'कोई निदान इतिहास नहीं';
     }
   }
   
   String _getStartChatMessage(LanguageProvider lang) {
     switch (lang.currentLanguage) {
       case AppLanguage.english:
-        return 'Start a new chat to diagnose plant diseases';
+        return 'Take or upload a photo of your plant to diagnose diseases';
       case AppLanguage.spanish:
-        return 'Inicia un nuevo chat para diagnosticar enfermedades de plantas';
+        return 'Toma o sube una foto de tu planta para diagnosticar enfermedades';
       case AppLanguage.hindi:
-        return 'पौधों की बीमारियों का निदान करने के लिए नई चैट शुरू करें';
+        return 'बीमारियों का निदान करने के लिए अपने पौधे की फोटो लें या अपलोड करें';
     }
   }
   
   String _getNewChatLabel(LanguageProvider lang) {
     switch (lang.currentLanguage) {
       case AppLanguage.english:
-        return 'New Chat';
+        return 'New Diagnosis';
       case AppLanguage.spanish:
-        return 'Nuevo Chat';
+        return 'Nuevo Diagnóstico';
       case AppLanguage.hindi:
-        return 'नई चैट';
+        return 'नया निदान';
     }
   }
   
