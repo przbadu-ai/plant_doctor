@@ -41,6 +41,17 @@ class AppProvider extends ChangeNotifier {
   bool get isModelReady => _aiService.isInitialized;
   List<ModelInfo> get availableModels => _modelService.availableModels;
   
+  ModelInfo? get currentModelInfo {
+    if (_currentModelId == null) return null;
+    try {
+      return _modelService.availableModels.firstWhere(
+        (model) => model.id == _currentModelId,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+  
   void setLanguageProvider(LanguageProvider provider) {
     _languageProvider = provider;
     _aiService.setLanguageProvider(provider);
@@ -312,6 +323,10 @@ class AppProvider extends ChangeNotifier {
       'isModelReady': isModelReady,
       'currentModelId': _currentModelId,
     };
+  }
+
+  Map<String, dynamic> getVisionStatus() {
+    return _aiService.getVisionStatus();
   }
 
   // Thread management methods

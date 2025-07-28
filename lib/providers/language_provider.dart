@@ -109,32 +109,35 @@ class LanguageProvider extends ChangeNotifier {
       case 'image_analysis_prompt':
         switch (_currentLanguage) {
           case AppLanguage.english:
-            return '''I have uploaded an image of a plant that may have disease issues. 
-        Since I cannot process images directly, please help me by:
+            return '''Analyze this plant image for any diseases or health issues. Provide:
         
-        1. Asking me to describe what I see in the plant (color changes, spots, wilting, etc.)
-        2. Based on my description, identify possible diseases
-        3. Suggest treatments and preventive measures
+        1. Identified plant type (if possible)
+        2. Observed symptoms or abnormalities
+        3. Likely diseases or problems
+        4. Treatment recommendations
+        5. Preventive measures
         
-        Please start by asking me to describe the plant's symptoms.''';
+        Be specific and practical in your recommendations.''';
           case AppLanguage.spanish:
-            return '''He subido una imagen de una planta que puede tener problemas de enfermedades.
-        Como no puedo procesar imágenes directamente, por favor ayúdame:
+            return '''Analiza esta imagen de planta para detectar enfermedades o problemas de salud. Proporciona:
         
-        1. Pidiéndome que describa lo que veo en la planta (cambios de color, manchas, marchitamiento, etc.)
-        2. Basándote en mi descripción, identifica posibles enfermedades
-        3. Sugiere tratamientos y medidas preventivas
+        1. Tipo de planta identificada (si es posible)
+        2. Síntomas u anormalidades observadas
+        3. Posibles enfermedades o problemas
+        4. Recomendaciones de tratamiento
+        5. Medidas preventivas
         
-        Por favor, empieza pidiéndome que describa los síntomas de la planta.''';
+        Sé específico y práctico en tus recomendaciones.''';
           case AppLanguage.hindi:
-            return '''मैंने एक पौधे की तस्वीर अपलोड की है जिसमें बीमारी की समस्या हो सकती है।
-        चूंकि मैं सीधे तस्वीरों को प्रोसेस नहीं कर सकता, कृपया मेरी मदद करें:
+            return '''इस पौधे की छवि का विश्लेषण करके बीमारियों या स्वास्थ्य समस्याओं की पहचान करें। प्रदान करें:
         
-        1. मुझसे पूछें कि मैं पौधे में क्या देख रहा हूं (रंग परिवर्तन, धब्बे, मुरझाना, आदि)
-        2. मेरे विवरण के आधार पर, संभावित बीमारियों की पहचान करें
-        3. उपचार और निवारक उपाय सुझाएं
+        1. पहचाना गया पौधे का प्रकार (यदि संभव हो)
+        2. देखे गए लक्षण या असामान्यताएं
+        3. संभावित बीमारियां या समस्याएं
+        4. उपचार की सिफारिशें
+        5. निवारक उपाय
         
-        कृपया मुझसे पौधे के लक्षणों का वर्णन करने के लिए कहकर शुरू करें।''';
+        अपनी सिफारिशों में विशिष्ट और व्यावहारिक रहें।''';
         }
       case 'error_message':
         switch (_currentLanguage) {
@@ -255,6 +258,9 @@ Cuantos más detalles proporciones, mejor podré ayudar a diagnosticar y sugerir
   String get sizeTBD => _currentLanguage == AppLanguage.english ? 'Size TBD' :
                        _currentLanguage == AppLanguage.spanish ? 'Tamaño por determinar' : 'आकार निर्धारित नहीं';
   
+  String get currentModel => _currentLanguage == AppLanguage.english ? 'Active' :
+                            _currentLanguage == AppLanguage.spanish ? 'Activo' : 'सक्रिय';
+  
   String get huggingFaceTokenRequired => _currentLanguage == AppLanguage.english ? 'Hugging Face Token Required' :
                                         _currentLanguage == AppLanguage.spanish ? 'Se requiere token de Hugging Face' : 'Hugging Face टोकन आवश्यक है';
   
@@ -283,4 +289,27 @@ Cuantos más detalles proporciones, mejor podré ayudar a diagnosticar y sugerir
   
   String get saveToken => _currentLanguage == AppLanguage.english ? 'Save Token' :
                          _currentLanguage == AppLanguage.spanish ? 'Guardar Token' : 'टोकन सहेजें';
+  
+  String get welcomeMessage => _currentLanguage == AppLanguage.english ? 'Welcome to Plant Doctor!' :
+                              _currentLanguage == AppLanguage.spanish ? '¡Bienvenido a Plant Doctor!' : 'Plant Doctor में आपका स्वागत है!';
+  
+  String get getStartedMessage => _currentLanguage == AppLanguage.english ? 'Get started by taking or uploading a photo of your plant' :
+                                 _currentLanguage == AppLanguage.spanish ? 'Comienza tomando o subiendo una foto de tu planta' : 
+                                 'अपने पौधे की फोटो लेकर या अपलोड करके शुरू करें';
+  
+  String get takePhotoHint => _currentLanguage == AppLanguage.english ? 'Use your camera' :
+                             _currentLanguage == AppLanguage.spanish ? 'Usa tu cámara' : 'अपना कैमरा उपयोग करें';
+  
+  String get choosePhotoHint => _currentLanguage == AppLanguage.english ? 'Select from gallery' :
+                               _currentLanguage == AppLanguage.spanish ? 'Seleccionar de la galería' : 'गैलरी से चुनें';
+  
+  String get askQuestion => _currentLanguage == AppLanguage.english ? 'Ask a Question' :
+                           _currentLanguage == AppLanguage.spanish ? 'Hacer una Pregunta' : 'प्रश्न पूछें';
+  
+  String get askQuestionHint => _currentLanguage == AppLanguage.english ? 'Type your question below' :
+                               _currentLanguage == AppLanguage.spanish ? 'Escribe tu pregunta abajo' : 'नीचे अपना प्रश्न टाइप करें';
+  
+  String get tipMessage => _currentLanguage == AppLanguage.english ? 'Tip: For best results, take clear photos in good lighting' :
+                          _currentLanguage == AppLanguage.spanish ? 'Consejo: Para mejores resultados, toma fotos claras con buena iluminación' : 
+                          'सुझाव: सर्वोत्तम परिणामों के लिए, अच्छी रोशनी में स्पष्ट फोटो लें';
 }
