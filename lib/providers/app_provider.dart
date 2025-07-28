@@ -325,6 +325,10 @@ class AppProvider extends ChangeNotifier {
     };
   }
 
+  Map<String, dynamic> getVisionStatus() {
+    return _aiService.getVisionStatus();
+  }
+
   // Thread management methods
   Future<void> loadChatThreads() async {
     _isLoadingThreads = true;

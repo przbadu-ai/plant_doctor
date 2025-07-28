@@ -235,17 +235,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         onPressed: () async {
                           final status = await provider.getModelStatus();
+                          final visionStatus = provider.getVisionStatus();
                           if (!context.mounted) return;
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Model Status'),
+                              title: const Text('Model & Vision Status'),
                               content: Text(
                                 'Model Path: ${status['modelPath']}\n'
                                 'Model ID: ${status['modelId']}\n'
                                 'Model Exists: ${status['modelExists']}\n'
                                 'Is Model Ready: ${status['isModelReady']}\n'
-                                'Current Model ID: ${status['currentModelId']}',
+                                'Current Model ID: ${status['currentModelId']}\n\n'
+                                'Vision Status:\n'
+                                'Supports Vision: ${visionStatus['supportsVision']}\n'
+                                'Has Model: ${visionStatus['hasModel']}\n'
+                                'Has Chat: ${visionStatus['hasChat']}\n'
+                                'Is Initialized: ${visionStatus['isInitialized']}',
                               ),
                               actions: [
                                 TextButton(
@@ -256,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                        child: const Text('Debug Model Status'),
+                        child: const Text('Debug Model & Vision Status'),
                       ),
                     ],
                   ),
