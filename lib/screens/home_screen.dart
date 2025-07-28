@@ -172,90 +172,94 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<AppProvider>(
         builder: (context, provider, child) {
           if (!provider.isModelReady && !provider.isDownloading) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (provider.error != null) ...[
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Model Initialization Failed',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (provider.error != null) ...[
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
                           color: Theme.of(context).colorScheme.error,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        provider.error!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
+                        const SizedBox(height: 16),
+                        Text(
+                          'Model Initialization Failed',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
-                      ),
-                    ] else ...[
-                      Icon(
-                        Icons.download_for_offline_outlined,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary,
+                        const SizedBox(height: 8),
+                        Text(
+                          provider.error!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ] else ...[
+                        Icon(
+                          Icons.download_for_offline_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          langProvider.noModelDownloaded,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          langProvider.downloadModelMessage,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const ModelSelectorWidget(),
+                          );
+                        },
+                        icon: const Icon(Icons.download),
+                        label: Text(langProvider.downloadModel),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        langProvider.noModelDownloaded,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        langProvider.downloadModelMessage,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                      TextButton(
+                        onPressed: () async {
+                          final status = await provider.getModelStatus();
+                          if (!context.mounted) return;
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Model Status'),
+                              content: Text(
+                                'Model Path: ${status['modelPath']}\n'
+                                'Model ID: ${status['modelId']}\n'
+                                'Model Exists: ${status['modelExists']}\n'
+                                'Is Model Ready: ${status['isModelReady']}\n'
+                                'Current Model ID: ${status['currentModelId']}',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: const Text('Debug Model Status'),
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const ModelSelectorWidget(),
-                        );
-                      },
-                      icon: const Icon(Icons.download),
-                      label: Text(langProvider.downloadModel),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () async {
-                        final status = await provider.getModelStatus();
-                        if (!context.mounted) return;
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Model Status'),
-                            content: Text(
-                              'Model Path: ${status['modelPath']}\n'
-                              'Model ID: ${status['modelId']}\n'
-                              'Model Exists: ${status['modelExists']}\n'
-                              'Is Model Ready: ${status['isModelReady']}\n'
-                              'Current Model ID: ${status['currentModelId']}',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: const Text('Debug Model Status'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );
