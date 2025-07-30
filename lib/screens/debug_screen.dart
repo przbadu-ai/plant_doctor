@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/logger.dart';
 
 class DebugScreen extends StatelessWidget {
   const DebugScreen({super.key});
@@ -27,12 +28,12 @@ class DebugScreen extends StatelessWidget {
       for (var file in files) {
         if (file is File && file.path.endsWith('.task')) {
           await file.delete();
-          print('Deleted: ${file.path}');
+          Logger.log('Deleted: ${file.path}');
         }
         // Also delete XNNPack cache files
         if (file is File && file.path.contains('xnnpack_cache')) {
           await file.delete();
-          print('Deleted cache: ${file.path}');
+          Logger.log('Deleted cache: ${file.path}');
         }
       }
       

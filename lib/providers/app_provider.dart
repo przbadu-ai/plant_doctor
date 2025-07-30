@@ -8,6 +8,7 @@ import '../services/ai_service.dart';
 import '../services/model_download_service.dart';
 import '../services/chat_persistence_service.dart';
 import 'language_provider.dart';
+import '../utils/logger.dart';
 
 class AppProvider extends ChangeNotifier {
   final AIService _aiService = AIService();
@@ -40,6 +41,9 @@ class AppProvider extends ChangeNotifier {
   String get downloadStatus => _downloadStatus;
   bool get isModelReady => _aiService.isInitialized;
   List<ModelInfo> get availableModels => _modelService.availableModels;
+  bool get isContextNearLimit => _aiService.isContextNearLimit;
+  bool get isContextFull => _aiService.isContextFull;
+  Map<String, dynamic> get contextStatus => _aiService.getContextStatus();
   
   ModelInfo? get currentModelInfo {
     if (_currentModelId == null) return null;
@@ -69,32 +73,32 @@ class AppProvider extends ChangeNotifier {
     final modelPath = await _modelService.getCurrentModelPath();
     final modelId = await _modelService.getCurrentModelId();
     
-    print('App initialization - Model path: $modelPath, Model ID: $modelId');
+    Logger.log('App initialization - Model path: $modelPath, Model ID: $modelId');
     
     if (modelPath != null && modelId != null) {
       final modelExists = await _modelService.isModelDownloaded(modelId);
-      print('Model exists check: $modelExists');
+      Logger.log('Model exists check: $modelExists');
       
       if (modelExists) {
         _currentModelId = modelId;
-        print('Initializing AI with model: $modelPath');
+        Logger.log('Initializing AI with model: $modelPath');
         await _initializeAI(modelPath);
       } else {
-        print('Model file not found at expected location');
+        Logger.log('Model file not found at expected location');
         // Clear invalid preferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('current_model_path');
         await prefs.remove('current_model_id');
       }
     } else {
-      print('No saved model information found');
+      Logger.log('No saved model information found');
     }
     
     notifyListeners();
   }
 
   Future<void> downloadModel(String modelId) async {
-    print('Starting download for model: $modelId');
+    Logger.log('Starting download for model: $modelId');
     _isDownloading = true;
     _downloadProgress = 0.0;
     _error = null;
@@ -120,11 +124,11 @@ class AppProvider extends ChangeNotifier {
         // Check if this model supports vision
         final model = _modelService.availableModels.firstWhere((m) => m.id == modelId);
         if (!model.supportsVision) {
-          print('Warning: Downloaded model does not support vision analysis');
+          Logger.log('Warning: Downloaded model does not support vision analysis');
         }
       }
     } catch (e) {
-      print('Download error: $e');
+      Logger.log('Download error: $e');
       _error = 'Failed to download model: $e';
       _downloadStatus = 'Download failed';
     } finally {
@@ -138,11 +142,11 @@ class AppProvider extends ChangeNotifier {
     try {
       await FirebaseCrashlytics.instance.log('Starting AI initialization with path: $modelPath');
       await _aiService.initialize(modelPath);
-      await _aiService.createNewChat();
+      // Don't create chat immediately - let it be created on demand
       await FirebaseCrashlytics.instance.log('AI initialization completed successfully');
       notifyListeners();
     } catch (e, stackTrace) {
-      print('AI initialization error: $e');
+      Logger.log('AI initialization error: $e');
       _error = 'Failed to initialize AI: $e';
       
       // Report to Crashlytics with device context
@@ -207,8 +211,8 @@ class AppProvider extends ChangeNotifier {
       ));
       _updateCurrentThread();
     } catch (e) {
-      print('Error analyzing plant image: $e');
-      print('Error type: ${e.runtimeType}');
+      Logger.log('Error analyzing plant image: $e');
+      Logger.log('Error type: ${e.runtimeType}');
       _error = 'Failed to analyze image: $e';
       
       // For any error, we'll provide helpful guidance
@@ -266,8 +270,8 @@ class AppProvider extends ChangeNotifier {
       ));
       _updateCurrentThread();
     } catch (e) {
-      print('Error sending message: $e');
-      print('Error type: ${e.runtimeType}');
+      Logger.log('Error sending message: $e');
+      Logger.log('Error type: ${e.runtimeType}');
       _error = 'Failed to get response: $e';
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -307,7 +311,7 @@ class AppProvider extends ChangeNotifier {
     if (_currentThreadId != null) {
       // Start a new thread when clearing chat
       createNewThread();
-      _aiService.createNewChat();
+      _aiService.resetChat();
     }
   }
 
@@ -337,7 +341,7 @@ class AppProvider extends ChangeNotifier {
     try {
       _chatThreads = await _chatPersistence.loadAllThreads();
     } catch (e) {
-      print('Error loading chat threads: $e');
+      Logger.log('Error loading chat threads: $e');
       _chatThreads = [];
     } finally {
       _isLoadingThreads = false;
@@ -429,6 +433,25 @@ class AppProvider extends ChangeNotifier {
     } else {
       _chatThreads.insert(0, _currentThread!);
     }
+  }
+
+  // Create a new chat when context is full
+  Future<void> createNewChat() async {
+    // Reset AI chat
+    _aiService.resetChat();
+    
+    // Clear messages
+    _messages.clear();
+    _currentThread = null;
+    _currentThreadId = null;
+    _error = null;
+    
+    notifyListeners();
+  }
+  
+  // Get AI status for debugging (including vision and context)
+  Map<String, dynamic> getAIStatus() {
+    return _aiService.getVisionStatus();
   }
 
   @override
