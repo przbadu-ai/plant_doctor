@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_thread.dart';
+import '../utils/logger.dart';
 
 class ChatPersistenceService {
   static const String _chatThreadsKey = 'chat_threads';
@@ -30,7 +31,7 @@ class ChatPersistenceService {
       
       return threads;
     } catch (e) {
-      print('Failed to load chat threads: $e');
+      Logger.log('Failed to load chat threads: $e');
       return [];
     }
   }
@@ -68,7 +69,7 @@ class ChatPersistenceService {
       
       await prefs.setString(_chatThreadsKey, jsonString);
     } catch (e) {
-      print('Failed to save chat thread: $e');
+      Logger.log('Failed to save chat thread: $e');
     }
   }
   
@@ -90,7 +91,7 @@ class ChatPersistenceService {
         await setCurrentThreadId(null);
       }
     } catch (e) {
-      print('Failed to delete chat thread: $e');
+      Logger.log('Failed to delete chat thread: $e');
     }
   }
   
@@ -99,7 +100,7 @@ class ChatPersistenceService {
       final threads = await loadAllThreads();
       return threads.firstWhere((t) => t.id == threadId);
     } catch (e) {
-      print('Failed to load chat thread: $e');
+      Logger.log('Failed to load chat thread: $e');
       return null;
     }
   }
@@ -110,7 +111,7 @@ class ChatPersistenceService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_currentThreadKey);
     } catch (e) {
-      print('Failed to get current thread ID: $e');
+      Logger.log('Failed to get current thread ID: $e');
       return null;
     }
   }
@@ -124,7 +125,7 @@ class ChatPersistenceService {
         await prefs.remove(_currentThreadKey);
       }
     } catch (e) {
-      print('Failed to set current thread ID: $e');
+      Logger.log('Failed to set current thread ID: $e');
     }
   }
   
@@ -135,7 +136,7 @@ class ChatPersistenceService {
       await prefs.remove(_chatThreadsKey);
       await prefs.remove(_currentThreadKey);
     } catch (e) {
-      print('Failed to clear chat history: $e');
+      Logger.log('Failed to clear chat history: $e');
     }
   }
 }

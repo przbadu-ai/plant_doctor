@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'models') {
                 showDialog(
                   context: context,
@@ -142,9 +142,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
                 );
+              } else if (value == 'new_chat') {
+                final provider = Provider.of<AppProvider>(context, listen: false);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Start New Chat?'),
+                    content: const Text('This will clear the current conversation. Your chat history will be saved.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('New Chat'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  await provider.createNewChat();
+                }
               }
             },
             itemBuilder: (context) => [
+              if (context.read<AppProvider>().messages.isNotEmpty)
+                PopupMenuItem(
+                  value: 'new_chat',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.add_comment_outlined),
+                      const SizedBox(width: 12),
+                      const Text('New Chat'),
+                    ],
+                  ),
+                ),
               PopupMenuItem(
                 value: 'models',
                 child: Row(
@@ -235,23 +268,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         onPressed: () async {
                           final status = await provider.getModelStatus();
-                          final visionStatus = provider.getVisionStatus();
+                          final aiStatus = provider.getAIStatus();
+                          final contextStatus = aiStatus['contextStatus'] as Map<String, dynamic>?;
                           if (!context.mounted) return;
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Model & Vision Status'),
-                              content: Text(
-                                'Model Path: ${status['modelPath']}\n'
-                                'Model ID: ${status['modelId']}\n'
-                                'Model Exists: ${status['modelExists']}\n'
-                                'Is Model Ready: ${status['isModelReady']}\n'
-                                'Current Model ID: ${status['currentModelId']}\n\n'
-                                'Vision Status:\n'
-                                'Supports Vision: ${visionStatus['supportsVision']}\n'
-                                'Has Model: ${visionStatus['hasModel']}\n'
-                                'Has Chat: ${visionStatus['hasChat']}\n'
-                                'Is Initialized: ${visionStatus['isInitialized']}',
+                              title: const Text('AI Status'),
+                              content: SingleChildScrollView(
+                                child: Text(
+                                  'Model Path: ${status['modelPath']}\n'
+                                  'Model ID: ${status['modelId']}\n'
+                                  'Model Exists: ${status['modelExists']}\n'
+                                  'Is Model Ready: ${status['isModelReady']}\n\n'
+                                  'Vision Status:\n'
+                                  'Vision Available: ${aiStatus['isVisionAvailable']}\n'
+                                  'Using Vision Mode: ${aiStatus['isUsingVisionMode']}\n'
+                                  'Has Text Model: ${aiStatus['hasTextModel']}\n'
+                                  'Has Vision Model: ${aiStatus['hasVisionModel']}\n\n'
+                                  'Context Status:\n'
+                                  'Messages: ${contextStatus?['messageCount']}/${contextStatus?['maxMessages']}\n'
+                                  'Tokens: ~${contextStatus?['approximateTokens']}/${contextStatus?['maxTokens']}\n'
+                                  'Near Limit: ${contextStatus?['isNearLimit']}\n'
+                                  'Is Full: ${contextStatus?['isFull']}',
+                                ),
                               ),
                               actions: [
                                 TextButton(
@@ -262,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         },
-                        child: const Text('Debug Model & Vision Status'),
+                        child: const Text('Debug AI Status'),
                       ),
                     ],
                   ),
@@ -337,6 +377,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
+              // Context warning banner
+              if (provider.isContextNearLimit && !provider.isContextFull)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Chat approaching limit. Consider starting a new chat for best performance.',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Start New Chat?'),
+                              content: const Text('This will clear the current conversation. Your chat history will be saved.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('New Chat'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && mounted) {
+                            await provider.createNewChat();
+                          }
+                        },
+                        child: const Text('New Chat'),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: provider.messages.isEmpty
                     ? _EmptyStateWidget(
@@ -363,15 +452,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       IconButton.filledTonal(
                         icon: const Icon(Icons.add_photo_alternate_outlined),
-                        onPressed: _showImageSourceDialog,
-                        tooltip: langProvider.addImage,
+                        onPressed: provider.isContextFull ? null : _showImageSourceDialog,
+                        tooltip: provider.isContextFull ? 'Chat limit reached' : langProvider.addImage,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _messageController,
+                          enabled: !provider.isContextFull,
                           decoration: InputDecoration(
-                            hintText: langProvider.askAboutPlants,
+                            hintText: provider.isContextFull 
+                              ? 'Chat limit reached - Start a new chat' 
+                              : langProvider.askAboutPlants,
                             filled: true,
                             fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             contentPadding: const EdgeInsets.symmetric(
@@ -394,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-                          onSubmitted: (text) {
+                          onSubmitted: provider.isContextFull ? null : (text) {
                             if (text.isNotEmpty) {
                               provider.sendMessage(text);
                               _messageController.clear();
@@ -405,14 +497,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       IconButton.filled(
                         icon: const Icon(Icons.send),
-                        onPressed: provider.isLoading ? null : () {
+                        onPressed: provider.isLoading || provider.isContextFull ? null : () {
                           final text = _messageController.text;
                           if (text.isNotEmpty) {
                             provider.sendMessage(text);
                             _messageController.clear();
                           }
                         },
-                        tooltip: langProvider.sendMessage,
+                        tooltip: provider.isContextFull ? 'Chat limit reached' : langProvider.sendMessage,
                       ),
                     ],
                   ),

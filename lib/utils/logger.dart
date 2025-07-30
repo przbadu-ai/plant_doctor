@@ -1,7 +1,8 @@
 /// Simple logger utility for development
 /// In production, these logs can be disabled or replaced with a proper logging framework
 class Logger {
-  static const bool _enableLogging = true; // Set to false in production
+  // Use kDebugMode which is properly handled by Flutter
+  static const bool _enableLogging = !bool.fromEnvironment('dart.vm.product');
 
   static void log(String message) {
     if (_enableLogging) {

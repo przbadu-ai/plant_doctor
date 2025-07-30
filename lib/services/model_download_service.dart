@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'secure_config_service.dart';
 import '../utils/file_size_formatter.dart';
+import '../utils/logger.dart';
 
 class ModelInfo {
   final String id;
@@ -137,7 +138,7 @@ class ModelDownloadService {
       
       return null;
     } catch (e) {
-      print('Error fetching file size: $e');
+      Logger.log('Error fetching file size: $e');
       return null;
     }
   }
@@ -170,7 +171,7 @@ class ModelDownloadService {
       
       // Cache the actual size for this model
       _actualFileSizes[modelId] = actualSize;
-      print('Model $modelId actual size: $actualSize bytes');
+      Logger.log('Model $modelId actual size: $actualSize bytes');
 
       // Check if model already exists
       if (await modelFile.exists()) {
@@ -302,7 +303,7 @@ class ModelDownloadService {
       final modelPath = _getModelPath(dir.path, model.id, extension);
       final modelFile = File(modelPath);
       
-      print('Checking model at: $modelPath');
+      Logger.log('Checking model at: $modelPath');
       
       if (await modelFile.exists()) {
         final fileSize = await modelFile.length();
@@ -313,40 +314,40 @@ class ModelDownloadService {
         
         if (savedSize != null) {
           // Use saved size for comparison
-          print('Model file exists with size: $fileSize bytes (expected from saved: $savedSize bytes)');
+          Logger.log('Model file exists with size: $fileSize bytes (expected from saved: $savedSize bytes)');
           final isValid = fileSize == savedSize;
-          print('Model validation: $isValid');
+          Logger.log('Model validation: $isValid');
           return isValid;
         } else if (_actualFileSizes.containsKey(modelId)) {
           // Use cached size
           final cachedSize = _actualFileSizes[modelId]!;
-          print('Model file exists with size: $fileSize bytes (expected from cache: $cachedSize bytes)');
+          Logger.log('Model file exists with size: $fileSize bytes (expected from cache: $cachedSize bytes)');
           final isValid = fileSize == cachedSize;
-          print('Model validation: $isValid');
+          Logger.log('Model validation: $isValid');
           return isValid;
         } else {
           // Fetch actual size from server
-          print('No saved size found, fetching from server...');
+          Logger.log('No saved size found, fetching from server...');
           final actualSize = await getActualFileSize(model.url);
           if (actualSize != null) {
             _actualFileSizes[modelId] = actualSize;
             await prefs.setInt('model_size_$modelId', actualSize);
-            print('Model file exists with size: $fileSize bytes (expected from server: $actualSize bytes)');
+            Logger.log('Model file exists with size: $fileSize bytes (expected from server: $actualSize bytes)');
             final isValid = fileSize == actualSize;
-            print('Model validation: $isValid');
+            Logger.log('Model validation: $isValid');
             return isValid;
           } else {
-            print('Could not determine expected size');
+            Logger.log('Could not determine expected size');
             return false;
           }
         }
       } else {
-        print('Model file does not exist at: $modelPath');
+        Logger.log('Model file does not exist at: $modelPath');
       }
       
       return false;
     } catch (e) {
-      print('Error checking model: $e');
+      Logger.log('Error checking model: $e');
       return false;
     }
   }

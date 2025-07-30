@@ -12,6 +12,7 @@ import 'screens/settings_screen.dart';
 import 'screens/debug_screen.dart';
 import 'services/secure_config_service.dart';
 import 'config/app_theme.dart';
+import 'utils/logger.dart';
 
 void main() async {
   runZonedGuarded<Future<void>>(() async {
@@ -29,7 +30,7 @@ void main() async {
       // Enable crash collection in debug mode (optional)
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
     } catch (e) {
-      print('Firebase initialization error: $e');
+      Logger.log('Firebase initialization error: $e');
       // Continue without Firebase if initialization fails
     }
     
