@@ -1,0 +1,84 @@
+appId: dev.przbadu.plant_doctor
+---
+# Test: Happy Path - Plant Disease Diagnosis
+- launchApp
+- assertVisible: "Plant Doctor"
+
+# Step 1: Start new diagnosis if needed
+- tapOn:
+    text: "New"
+    optional: true
+
+# Step 2: Open menu to access models
+- tapOn:
+    point: "90%,10%"  # Top right corner for menu
+
+- waitForAnimationToEnd
+
+# Try to select models option
+- tapOn:
+    text: "Model"
+    optional: true
+
+# Step 3: Select the 2B model
+- runFlow:
+    when:
+      visible: "gemma"
+    commands:
+      - tapOn:
+          text: ".*2b.*"
+          index: 0
+      - waitForAnimationToEnd
+
+# Close dialogs
+- pressKey: back
+- pressKey: back
+
+# Step 4: Upload image - tap attachment button
+- tapOn:
+    point: "10%,90%"  # Bottom left area where attachment button typically is
+
+- waitForAnimationToEnd
+
+# Select gallery/upload option
+- tapOn:
+    text: "Gallery"
+    optional: true
+
+- tapOn:
+    text: "Upload"
+    optional: true
+
+# Step 5: Wait for AI processing
+- waitForAnimationToEnd
+
+# Check for any disease-related response
+- runFlow:
+    when:
+      visible:
+        text: ".*disease.*|.*blight.*|.*fungal.*"
+    commands:
+      - takeScreenshot: ai_detected_disease
+
+# Step 6: If no detection, send text description
+- runFlow:
+    when:
+      notVisible:
+        text: ".*blight.*"
+    commands:
+      # Find and tap message input field
+      - tapOn:
+          point: "50%,85%"  # Bottom center where input usually is
+      
+      - inputText: "I have maize plant with brown leaves and there are holes in some of the leaf area"
+      
+      # Send message
+      - pressKey: Enter
+      
+      - waitForAnimationToEnd
+      
+      # Take screenshot after text input
+      - takeScreenshot: text_based_diagnosis
+
+# Final screenshot
+- takeScreenshot: diagnosis_complete

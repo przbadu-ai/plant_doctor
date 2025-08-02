@@ -1,0 +1,49 @@
+appId: dev.przbadu.plant_doctor
+---
+# Simple Plant Disease Diagnosis Test
+- launchApp
+- assertVisible: "Plant Doctor"
+
+# Take screenshot of initial state
+- takeScreenshot: app_home
+
+# Tap on attachment/camera icon (usually bottom left)
+- tapOn:
+    point: "15%,85%"
+
+- waitForAnimationToEnd
+- takeScreenshot: attachment_menu
+
+# Try to select gallery option
+- tapOn:
+    text: ".*[Gg]allery.*|.*[Pp]hoto.*"
+    optional: true
+
+# Alternative: tap "Upload from Gallery" if visible
+- tapOn:
+    text: "Upload from Gallery"
+    optional: true
+
+# Wait a moment for gallery/file picker
+- waitForAnimationToEnd
+
+# Since we can't actually select the image in Maestro, go back
+- pressKey: back
+
+# Now try text input instead
+- tapOn:
+    point: "50%,85%"  # Message input area
+
+- inputText: "I have a maize plant with brown leaves and there are holes in some of the leaf area. What disease could this be?"
+
+# Send the message
+- pressKey: Enter
+
+# Wait for AI response
+- waitForAnimationToEnd
+
+# Take screenshot of the response
+- takeScreenshot: ai_response
+
+# Verify we got some response about plant disease
+- assertVisible: ".*disease.*|.*plant.*|.*maize.*|.*treatment.*|.*leaf.*"

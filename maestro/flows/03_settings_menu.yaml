@@ -1,0 +1,25 @@
+appId: dev.przbadu.plant_doctor
+---
+- launchApp
+- assertVisible: "Plant Doctor"
+
+# Open menu
+- tapOn:
+    id: ".*more.*|.*menu.*|.*overflow.*"
+    optional: true
+
+# Take screenshot of menu
+- takeScreenshot: menu_options
+
+# Try to access settings if available
+- tapOn:
+    text: "Settings"
+    optional: true
+
+- waitForAnimationToEnd
+
+# Take screenshot
+- takeScreenshot: settings_screen
+
+# Go back to main screen
+- pressKey: back

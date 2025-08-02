@@ -1,0 +1,25 @@
+appId: dev.przbadu.plant_doctor
+---
+- launchApp
+- assertVisible: "Plant Doctor"
+
+# Test adding an image (tap the attachment button)
+- tapOn:
+    id: ".*attach.*|.*photo.*|.*image.*|.*camera.*"
+    optional: true
+
+# If attachment menu appears, take a screenshot
+- takeScreenshot: attachment_menu
+
+# Go back if menu was opened
+- pressKey: back
+
+# Test typing a message
+- tapOn:
+    id: ".*message.*|.*input.*|.*text.*field.*"
+    optional: true
+
+- inputText: "Hello, can you help me identify a plant disease?"
+
+# Take screenshot of chat interface
+- takeScreenshot: chat_interface

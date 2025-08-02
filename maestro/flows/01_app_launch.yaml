@@ -1,0 +1,5 @@
+appId: dev.przbadu.plant_doctor
+---
+- launchApp
+- assertVisible: "Plant Doctor"
+- takeScreenshot: app_launched

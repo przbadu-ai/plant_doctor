@@ -1,0 +1,7 @@
+# Maestro configuration for Plant Doctor app
+name: Plant Doctor
+tags:
+  - plant-doctor
+
+flows:
+  - flows/
